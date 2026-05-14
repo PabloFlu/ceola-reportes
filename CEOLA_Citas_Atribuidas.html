@@ -309,7 +309,23 @@
     .kpi-grid { grid-template-columns: repeat(2, 1fr); }
     .step-box { min-width: 90px; }
   }
+  /* ── Multi-select ── */
+  .ms-wrap{position:relative;}
+  .ms-trigger{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border:1px solid var(--border);border-radius:6px;background:var(--card);cursor:pointer;font-size:.875rem;min-height:38px;color:var(--text);user-select:none;}
+  .ms-trigger:hover{border-color:var(--teal);}
+  .ms-dropdown{position:absolute;top:calc(100% + 3px);left:0;right:0;z-index:300;background:var(--card);border:1px solid var(--border);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.13);max-height:230px;overflow-y:auto;display:none;}
+  .ms-wrap.open .ms-dropdown{display:block;}
+  .ms-option{display:flex;align-items:center;gap:8px;padding:8px 12px;cursor:pointer;font-size:.85rem;color:var(--text);}
+  .ms-option:hover{background:var(--bg);}
+  .ms-option input[type=checkbox]{accent-color:var(--teal);width:15px;height:15px;cursor:pointer;flex-shrink:0;}
+  .ms-all-row{font-weight:600;border-bottom:1px solid var(--border);}
+  .ms-badge{background:var(--teal);color:#fff;border-radius:10px;padding:1px 8px;font-size:.72rem;font-weight:700;margin-left:4px;}
+  /* ── Chart ── */
+  .chart-section{background:var(--card);border-radius:12px;border:1px solid var(--border);padding:28px 24px;margin-top:40px;}
+  .chart-title{font-size:1rem;font-weight:700;color:var(--text);margin-bottom:3px;}
+  .chart-sub{font-size:.8rem;color:var(--muted);margin-bottom:20px;}
 </style>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
 <!-- PASSWORD GATE -->
@@ -602,43 +618,70 @@
     <div class="filters-grid">
       <div class="filter-group">
         <label>Anuncio</label>
-        <select id="filterAd" onchange="applyFilters()">
-          <option value="">Todos los anuncios</option>
-        </select>
+        <div class="ms-wrap" id="msAd" data-ph="Todos los anuncios">
+          <div class="ms-trigger" onclick="toggleMS('msAd')">
+            <span id="msAd-lbl">Todos los anuncios</span><span style="opacity:.5">▾</span>
+          </div>
+          <div class="ms-dropdown">
+            <label class="ms-option ms-all-row"><input type="checkbox" id="msAd-all" checked onchange="msToggleAll('msAd')"> Todos</label>
+            
+          </div>
+        </div>
       </div>
       <div class="filter-group">
         <label>Campaña</label>
-        <select id="filterCampaign" onchange="applyFilters()">
-          <option value="">Todas las campañas</option>
-        </select>
+        <div class="ms-wrap" id="msCamp" data-ph="Todas las campañas">
+          <div class="ms-trigger" onclick="toggleMS('msCamp')">
+            <span id="msCamp-lbl">Todas las campañas</span><span style="opacity:.5">▾</span>
+          </div>
+          <div class="ms-dropdown">
+            <label class="ms-option ms-all-row"><input type="checkbox" id="msCamp-all" checked onchange="msToggleAll('msCamp')"> Todos</label>
+            
+          </div>
+        </div>
       </div>
       <div class="filter-group">
         <label>Tipo de Servicio</label>
-        <select id="filterService" onchange="applyFilters()">
-          <option value="">Todos los tipos</option>
-          <option value="Consulta Médica">Consulta Médica</option>
-          <option value="Examen">Examen</option>
-          <option value="Pabellón (Cirugía)">Pabellón (Cirugía)</option>
-        </select>
+        <div class="ms-wrap" id="msSvc" data-ph="Todos los tipos">
+          <div class="ms-trigger" onclick="toggleMS('msSvc')">
+            <span id="msSvc-lbl">Todos los tipos</span><span style="opacity:.5">▾</span>
+          </div>
+          <div class="ms-dropdown">
+            <label class="ms-option ms-all-row"><input type="checkbox" id="msSvc-all" checked onchange="msToggleAll('msSvc')"> Todos</label>
+            <label class="ms-option"><input type="checkbox" class="msSvc-item" value="Consulta Médica" checked onchange="msItemChange('msSvc')"> Consulta Médica</label>
+            <label class="ms-option"><input type="checkbox" class="msSvc-item" value="Examen" checked onchange="msItemChange('msSvc')"> Examen</label>
+            <label class="ms-option"><input type="checkbox" class="msSvc-item" value="Pabellón (Cirugía)" checked onchange="msItemChange('msSvc')"> Pabellón (Cirugía)</label>
+          </div>
+        </div>
       </div>
       <div class="filter-group">
         <label>Mes de la Cita</label>
-        <select id="filterMonth" onchange="applyFilters()">
-          <option value="">Todos los meses</option>
-          <option value="Febrero">Febrero</option>
-          <option value="Marzo">Marzo</option>
-          <option value="Abril">Abril</option>
-        </select>
+        <div class="ms-wrap" id="msMonth" data-ph="Todos los meses">
+          <div class="ms-trigger" onclick="toggleMS('msMonth')">
+            <span id="msMonth-lbl">Todos los meses</span><span style="opacity:.5">▾</span>
+          </div>
+          <div class="ms-dropdown">
+            <label class="ms-option ms-all-row"><input type="checkbox" id="msMonth-all" checked onchange="msToggleAll('msMonth')"> Todos</label>
+            <label class="ms-option"><input type="checkbox" class="msMonth-item" value="Febrero" checked onchange="msItemChange('msMonth')"> Febrero</label>
+            <label class="ms-option"><input type="checkbox" class="msMonth-item" value="Marzo" checked onchange="msItemChange('msMonth')"> Marzo</label>
+            <label class="ms-option"><input type="checkbox" class="msMonth-item" value="Abril" checked onchange="msItemChange('msMonth')"> Abril</label>
+          </div>
+        </div>
       </div>
       <div class="filter-group">
         <label>Estado de la Cita</label>
-        <select id="filterStatus" onchange="applyFilters()">
-          <option value="">Todos los estados</option>
-          <option value="Atendido">Atendido</option>
-          <option value="Recepcionado">Recepcionado</option>
-          <option value="Agendado">Agendado/Pendiente</option>
-          <option value="Cancelado">Cancelado</option>
-        </select>
+        <div class="ms-wrap" id="msStatus" data-ph="Todos los estados">
+          <div class="ms-trigger" onclick="toggleMS('msStatus')">
+            <span id="msStatus-lbl">Todos los estados</span><span style="opacity:.5">▾</span>
+          </div>
+          <div class="ms-dropdown">
+            <label class="ms-option ms-all-row"><input type="checkbox" id="msStatus-all" checked onchange="msToggleAll('msStatus')"> Todos</label>
+            <label class="ms-option"><input type="checkbox" class="msStatus-item" value="Atendido" checked onchange="msItemChange('msStatus')"> Atendido</label>
+            <label class="ms-option"><input type="checkbox" class="msStatus-item" value="Recepcionado" checked onchange="msItemChange('msStatus')"> Recepcionado</label>
+            <label class="ms-option"><input type="checkbox" class="msStatus-item" value="Agendado" checked onchange="msItemChange('msStatus')"> Agendado</label>
+            <label class="ms-option"><input type="checkbox" class="msStatus-item" value="Cancelado" checked onchange="msItemChange('msStatus')"> Cancelado</label>
+          </div>
+        </div>
       </div>
       <div class="filter-group">
         <label>Buscar paciente / RUT</label>
@@ -698,8 +741,11 @@ function init() {
   // Populate filter dropdowns
   const ads = [...new Set(ROWS.map(r => r.Nombre_Anuncio))].sort();
   const camps = [...new Set(ROWS.map(r => r.Campaña))].sort();
-  populateSelect('filterAd', ads);
-  populateSelect('filterCampaign', camps);
+  populateMS('msAd', ads);
+  populateMS('msCamp', camps);
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.ms-wrap')) document.querySelectorAll('.ms-wrap.open').forEach(w=>w.classList.remove('open'));
+  });
 
   // Summary table
   renderSummary();
@@ -711,13 +757,53 @@ function init() {
   applyFilters();
 }
 
-function populateSelect(id, vals) {
-  const sel = document.getElementById(id);
+// ── Multi-select engine ──────────────────────────────────────────────────────
+function populateMS(wrapId, vals) {
+  const dd = document.querySelector('#'+wrapId+' .ms-dropdown');
   vals.forEach(v => {
-    const opt = document.createElement('option');
-    opt.value = v; opt.textContent = v;
-    sel.appendChild(opt);
+    const lbl = document.createElement('label');
+    lbl.className = 'ms-option';
+    const cb = document.createElement('input');
+    cb.type = 'checkbox'; cb.className = wrapId+'-item'; cb.value = v; cb.checked = true;
+    cb.onchange = () => msItemChange(wrapId);
+    lbl.appendChild(cb); lbl.append(' '+v);
+    dd.appendChild(lbl);
   });
+}
+function toggleMS(id) {
+  const w = document.getElementById(id), open = w.classList.contains('open');
+  document.querySelectorAll('.ms-wrap.open').forEach(x=>x.classList.remove('open'));
+  if(!open) w.classList.add('open');
+}
+function msToggleAll(wrapId) {
+  const all = document.getElementById(wrapId+'-all');
+  document.querySelectorAll('.'+wrapId+'-item').forEach(cb=>cb.checked=all.checked);
+  updateMSLabel(wrapId); applyFilters();
+}
+function msItemChange(wrapId) {
+  const items=[...document.querySelectorAll('.'+wrapId+'-item')];
+  document.getElementById(wrapId+'-all').checked = items.every(cb=>cb.checked);
+  updateMSLabel(wrapId); applyFilters();
+}
+function updateMSLabel(id) {
+  const items=[...document.querySelectorAll('.'+id+'-item')];
+  const chk=items.filter(cb=>cb.checked);
+  const ph=document.getElementById(id).getAttribute('data-ph');
+  const lbl=document.getElementById(id+'-lbl');
+  if(!items.length||chk.length===items.length) lbl.innerHTML=ph;
+  else if(chk.length===1) lbl.innerHTML=chk[0].value;
+  else lbl.innerHTML=ph+' <span class="ms-badge">'+chk.length+'</span>';
+}
+function getMS(id) {
+  const items=[...document.querySelectorAll('.'+id+'-item')];
+  if(!items.length) return [];
+  const chk=items.filter(cb=>cb.checked).map(cb=>cb.value);
+  return chk.length===items.length ? [] : chk;
+}
+function clearMS(id) {
+  const a=document.getElementById(id+'-all'); if(a) a.checked=true;
+  document.querySelectorAll('.'+id+'-item').forEach(cb=>cb.checked=true);
+  updateMSLabel(id);
 }
 
 // ─── Summary Table ────────────────────────────────────────────────────────
@@ -748,19 +834,19 @@ function renderSummary() {
 
 // ─── Filters ──────────────────────────────────────────────────────────────
 function applyFilters() {
-  const ad      = document.getElementById('filterAd').value;
-  const camp    = document.getElementById('filterCampaign').value;
-  const svc     = document.getElementById('filterService').value;
-  const month   = document.getElementById('filterMonth').value;
-  const status  = document.getElementById('filterStatus').value;
-  const search  = document.getElementById('filterSearch').value.toLowerCase();
+  const ads    = getMS('msAd');
+  const camps  = getMS('msCamp');
+  const svcs   = getMS('msSvc');
+  const months = getMS('msMonth');
+  const stats  = getMS('msStatus');
+  const search = document.getElementById('filterSearch').value.toLowerCase();
 
   filtered = ROWS.filter(r => {
-    if (ad     && r.Nombre_Anuncio !== ad) return false;
-    if (camp   && r.Campaña !== camp) return false;
-    if (svc    && r.Tipo_Servicio !== svc) return false;
-    if (month  && r.Mes_Cita !== month) return false;
-    if (status && r.Estado_Cita_Grupo !== status) return false;
+    if (ads.length    && !ads.includes(r.Nombre_Anuncio))    return false;
+    if (camps.length  && !camps.includes(r.Campaña))         return false;
+    if (svcs.length   && !svcs.includes(r.Tipo_Servicio))    return false;
+    if (months.length && !months.includes(r.Mes_Cita))       return false;
+    if (stats.length  && !stats.includes(r.Estado_Cita_Grupo)) return false;
     if (search && !r.Nombre_Paciente.toLowerCase().includes(search) &&
         !r.RUT.toLowerCase().includes(search)) return false;
     return true;
@@ -778,9 +864,7 @@ function applyFilters() {
 }
 
 function clearFilters() {
-  ['filterAd','filterCampaign','filterService','filterMonth','filterStatus'].forEach(id => {
-    document.getElementById(id).value = '';
-  });
+  ['msAd','msCamp','msSvc','msMonth','msStatus'].forEach(id => clearMS(id));
   document.getElementById('filterSearch').value = '';
   applyFilters();
 }
@@ -881,5 +965,56 @@ function exportCSV() {
 // ─── Start ────────────────────────────────────────────────────────────────
 init();
 </script>
+
+  <!-- ── Monthly Chart ── -->
+  <div class="chart-section">
+    <div class="chart-title">Actividad mensual — Contactos vía ads vs. Citas atribuidas</div>
+    <div class="chart-sub">Eje izquierdo: citas atribuidas por tipo de servicio (barras apiladas + línea total). Eje derecho: contactos únicos que llegaron por ads ese mes (CRM completo, n=757).</div>
+    <canvas id="monthlyChart" height="95"></canvas>
+  </div>
+  <script>
+  (function(){
+    const months = ['Febrero','Marzo','Abril'];
+    const CRM_CONTACTS = {Febrero:37, Marzo:481, Abril:239};
+    const svc = (tipo,mes) => ROWS.filter(r=>r.Tipo_Servicio===tipo&&r.Mes_Cita===mes).length;
+    const consultas = months.map(m=>svc('Consulta Médica',m));
+    const examenes  = months.map(m=>svc('Examen',m));
+    const pabellon  = months.map(m=>svc('Pabellón (Cirugía)',m));
+    const totCitas  = months.map(m=>ROWS.filter(r=>r.Mes_Cita===m).length);
+    const contacts  = months.map(m=>CRM_CONTACTS[m]);
+
+    new Chart(document.getElementById('monthlyChart'), {
+      data:{
+        labels: months,
+        datasets:[
+          {type:'bar',  label:'Consulta Médica',        data:consultas, backgroundColor:'rgba(0,137,123,.82)',  borderRadius:4, stack:'citas', order:3},
+          {type:'bar',  label:'Examen',                 data:examenes,  backgroundColor:'rgba(0,172,193,.82)',  borderRadius:4, stack:'citas', order:3},
+          {type:'bar',  label:'Pabellón (Cirugía)',      data:pabellon,  backgroundColor:'rgba(123,31,162,.82)', borderRadius:4, stack:'citas', order:3},
+          {type:'line', label:'Total citas atribuidas',  data:totCitas,  borderColor:'#FF8F00', backgroundColor:'rgba(255,143,0,.08)', borderWidth:2.5, pointRadius:5, pointBackgroundColor:'#FF8F00', tension:.35, order:1, yAxisID:'y'},
+          {type:'line', label:'Contactos únicos ads (CRM)', data:contacts, borderColor:'#EF5350', backgroundColor:'rgba(239,83,80,.07)', borderWidth:2.5, pointRadius:5, pointBackgroundColor:'#EF5350', borderDash:[5,3], tension:.35, order:0, yAxisID:'y2'}
+        ]
+      },
+      options:{
+        responsive:true,
+        interaction:{mode:'index',intersect:false},
+        plugins:{
+          legend:{position:'bottom',labels:{padding:18,font:{size:12}}},
+          tooltip:{callbacks:{
+            footer: items => {
+              const s = items.filter(i=>i.dataset.stack==='citas').reduce((a,i)=>a+i.parsed.y,0);
+              return s>0 ? 'Total citas: '+s : '';
+            }
+          }}
+        },
+        scales:{
+          x:{grid:{display:false}},
+          y:{position:'left', title:{display:true,text:'Citas atribuidas',font:{size:11}}, ticks:{stepSize:5}, grid:{color:'rgba(0,0,0,.05)'}},
+          y2:{position:'right', title:{display:true,text:'Contactos CRM',font:{size:11}}, grid:{display:false}}
+        }
+      }
+    });
+  })();
+  </script>
+
 </body>
 </html>
