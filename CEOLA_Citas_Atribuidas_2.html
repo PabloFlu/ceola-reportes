@@ -385,12 +385,12 @@
 
       <div style="border:2px solid #EF5350;border-left:4px solid #B71C1C;border-radius:8px;padding:12px 16px;background:#FFEBEE">
         <div style="font-size:0.8rem;font-weight:700;color:#B71C1C;margin-bottom:4px">🗂️ Detalle de Pacientes — Archivo puente</div>
-        <div style="font-size:0.73rem;color:#C62828;margin-bottom:6px">Detalle de pacientes Febrero Abril.xlsx</div>
+        <div style="font-size:0.73rem;color:#C62828;margin-bottom:6px">Detalle de Pacientes — Feb+May combinado (deduplicado por RUT)</div>
         <div style="font-size:0.75rem;color:#374151;line-height:1.6">
-          📅 <strong>1 Feb 2026 → 31 Mar 2026</strong><br>
-          👤 1.733 pacientes registrados<br>
+          📅 <strong>1 Feb 2026 → 14 May 2026</strong><br>
+          👤 2.661 pacientes registrados<br>
           🔑 Vincula Teléfono ↔ RUT (identificador clínico)<br>
-          🟡 <strong>ANÁLISIS VÁLIDO HASTA EL 10 DE ABRIL</strong> — solo pacientes que contactaron entre el 11 y 14 de Abril no están en el archivo puente (brecha de 4 días)
+          🟡 <strong>COBERTURA: 1 Feb 2026 → 14 May 2026</strong> — dos archivos combinados y deduplicados por RUT
         </div>
       </div>
 
@@ -414,10 +414,10 @@
 
   <!-- Info Box -->
   <div class="info-box">
-    <strong>Metodología de atribución:</strong> Se cruzaron las 3 bases de datos disponibles para identificar pacientes que llegaron desde un anuncio Meta y luego agendaron cita en CEOLA. El CRM Vambee tiene <strong>1.617 contactos reales</strong> en el período (el CSV tiene 1.861 líneas porque algunos mensajes incluyen saltos de línea internos).
+    <strong>Metodología de atribución:</strong> Se cruzaron las 3 bases de datos disponibles para identificar pacientes que llegaron desde un anuncio Meta y luego agendaron cita en CEOLA. El CRM Vambee tiene <strong>2.342 contactos reales</strong> en el período combinado (dos archivos CSV deduplicados por ID de conversación).
     <div class="steps">
       <div class="step">
-        <div class="step-box"><span class="step-num">PASO 1</span>CRM Vambee<br><small>807 con código ad</small></div>
+        <div class="step-box"><span class="step-num">PASO 1</span>CRM Vambee<br><small>1.234 con código ad</small></div>
         <div class="step-arrow">→</div>
       </div>
       <div class="step">
@@ -429,7 +429,7 @@
         <div class="step-arrow">→</div>
       </div>
       <div class="step">
-        <div class="step-box" style="background:var(--teal)"><span class="step-num">RESULTADO</span>66 pacientes<br><small>96 citas atribuidas</small></div>
+        <div class="step-box" style="background:var(--teal)"><span class="step-num">RESULTADO</span>135 pacientes<br><small>250 citas atribuidas</small></div>
       </div>
     </div>
   </div>
@@ -442,19 +442,19 @@
       <div class="sub">Llegaron de ads Meta</div>
     </div>
     <div class="kpi-card">
-      <div class="val" style="color:var(--cyan)">96</div>
+      <div class="val" style="color:var(--cyan)">250</div>
       <div class="lbl">Citas totales</div>
       <div class="sub">Atribuidas a anuncios</div>
     </div>
     <div class="kpi-card">
-      <div class="val" style="color:var(--purple)">9</div>
+      <div class="val" style="color:var(--purple)">13</div>
       <div class="lbl">Anuncios con resultado</div>
-      <div class="sub">De 16 activos</div>
+      <div class="sub">Período Feb–May 2026</div>
     </div>
     <div class="kpi-card">
-      <div class="val" style="color:var(--amber)">1.5x</div>
+      <div class="val" style="color:var(--amber)">1.9x</div>
       <div class="lbl">Citas/paciente prom.</div>
-      <div class="sub">96 / 66</div>
+      <div class="sub">250 / 135</div>
     </div>
     <div class="kpi-card">
       <div class="val" style="color:var(--green)" id="kpiAtend">–</div>
@@ -464,14 +464,14 @@
     <div class="kpi-card">
       <div class="val" style="color:var(--dark)" id="kpiAtrPct">1.8%</div>
       <div class="lbl">De citas totales</div>
-      <div class="sub">96 / 5.367 del sistema</div>
+      <div class="sub">250 / 8.305 combinadas</div>
     </div>
   </div>
 
   <!-- Red alert: March 31 cutoff -->
   <div style="background:#FFEBEE;border:2px solid #EF5350;border-radius:10px;padding:14px 20px;margin-bottom:16px;font-size:0.84rem;color:#B71C1C;font-weight:700;display:flex;align-items:flex-start;gap:10px">
     <span style="font-size:1.3rem;flex-shrink:0">🔴</span>
-    <span>LÍMITE DEL ARCHIVO PUENTE: El "Detalle de Pacientes" contiene solo pacientes que se <strong>registraron por primera vez combinado cubre 1 Feb al 14 May 2026</strong>. Pacientes con teléfono no registrado en el sistema clínico no pueden cruzarse. Adicionalmente: Abril no están en el puente y sus citas no se pueden atribuir; (2) pacientes que ya eran clientes antes de Febrero tampoco están. <strong>Importante:</strong> citas de Abril de pacientes que sí están en el puente (registrados Feb-Mar) sí quedan capturadas — de hecho hay 43 citas de Abril en el conjunto atribuido. Los teléfonos registrados en el sistema clínico con formato diferente al CRM tampoco cruzan.</span>
+    <span>LÍMITE DEL ARCHIVO PUENTE: El "Detalle de Pacientes" contiene solo pacientes que se <strong>registraron por primera vez 1 Feb al 14 May 2026 (combinado)</strong>. Pacientes con teléfono no registrado en el sistema clínico no pueden cruzarse. Pacientes pre-Febrero sin reregistro tampoco están. Abril no están en el puente y sus citas no se pueden atribuir; (2) pacientes que ya eran clientes antes de Febrero tampoco están. <strong>Importante:</strong> citas de Abril de pacientes que sí están en el puente (registrados Feb-Mar) sí quedan capturadas — de hecho hay 43 citas de Abril en el conjunto atribuido. Los teléfonos registrados en el sistema clínico con formato diferente al CRM tampoco cruzan.</span>
   </div>
 
   <!-- Funnel & Pabellón context -->
@@ -495,42 +495,42 @@
         <tbody>
           <tr style="border-bottom:1px solid #F0F4F8">
             <td style="padding:8px 10px"><span style="color:#B71C1C;font-weight:700">Lost en CRM</span> — consultaron por WA pero nunca agendaron ni llegaron</td>
-            <td style="padding:8px 10px;text-align:center;font-weight:700;color:#B71C1C">507</td>
+            <td style="padding:8px 10px;text-align:center;font-weight:700;color:#B71C1C">721</td>
             <td style="padding:8px 10px;text-align:center;color:#B71C1C;font-weight:600">74%</td>
           </tr>
           <tr style="border-bottom:1px solid #F0F4F8">
             <td style="padding:8px 10px"><span style="color:#1565C0;font-weight:700">Pending en CRM</span> — aún en pipeline, pueden convertir después</td>
-            <td style="padding:8px 10px;text-align:center;font-weight:700;color:#1565C0">159</td>
+            <td style="padding:8px 10px;text-align:center;font-weight:700;color:#1565C0">217</td>
             <td style="padding:8px 10px;text-align:center;color:#1565C0;font-weight:600">23%</td>
           </tr>
           <tr>
             <td style="padding:8px 10px"><span style="color:#2E7D32;font-weight:700">Won + atendidos en Vambee, sin cruce</span> — agendaron y asistieron según CRM, pero la mayoría contactó en Abril (fuera del rango del DP)</td>
-            <td style="padding:8px 10px;text-align:center;font-weight:700;color:#2E7D32">17</td>
+            <td style="padding:8px 10px;text-align:center;font-weight:700;color:#2E7D32">49</td>
             <td style="padding:8px 10px;text-align:center;color:#2E7D32;font-weight:600">3%</td>
           </tr>
         </tbody>
       </table>
       <div style="margin-top:14px;padding-top:12px;border-top:1px dashed #E0E7EF">
-        <div style="font-size:0.78rem;font-weight:700;color:#0B1F3A;margin-bottom:8px">Visión completa de los 757 leads con anuncio:</div>
+        <div style="font-size:0.78rem;font-weight:700;color:#0B1F3A;margin-bottom:8px">Visión completa de los 1.134 leads con anuncio:</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
           <div style="background:#FFEBEE;border-radius:8px;padding:8px 14px;text-align:center;flex:1;min-width:90px">
-            <div style="font-size:1.1rem;font-weight:800;color:#B71C1C">537</div>
-            <div style="font-size:0.68rem;color:#B71C1C;font-weight:600">LOST · 71%</div>
+            <div style="font-size:1.1rem;font-weight:800;color:#B71C1C">828</div>
+            <div style="font-size:0.68rem;color:#B71C1C;font-weight:600">LOST · 73%</div>
             <div style="font-size:0.67rem;color:#6B7A8D">No convirtieron</div>
           </div>
           <div style="background:#E3F2FD;border-radius:8px;padding:8px 14px;text-align:center;flex:1;min-width:90px">
-            <div style="font-size:1.1rem;font-weight:800;color:#1565C0">181</div>
-            <div style="font-size:0.68rem;color:#1565C0;font-weight:600">PENDING · 24%</div>
+            <div style="font-size:1.1rem;font-weight:800;color:#1565C0">247</div>
+            <div style="font-size:0.68rem;color:#1565C0;font-weight:600">PENDING · 22%</div>
             <div style="font-size:0.67rem;color:#6B7A8D">En proceso</div>
           </div>
           <div style="background:#E8F5E9;border-radius:8px;padding:8px 14px;text-align:center;flex:1;min-width:90px">
-            <div style="font-size:1.1rem;font-weight:800;color:#2E7D32">39</div>
+            <div style="font-size:1.1rem;font-weight:800;color:#2E7D32">59</div>
             <div style="font-size:0.68rem;color:#2E7D32;font-weight:600">WON · 5%</div>
             <div style="font-size:0.67rem;color:#6B7A8D">Ganados en CRM</div>
           </div>
         </div>
         <div style="margin-top:10px;font-size:0.75rem;color:#4A5568;line-height:1.6;background:#F8FAFC;border-radius:8px;padding:10px 12px">
-          💡 <strong>Conclusión:</strong> de cada 100 personas que ven un anuncio y escriben por WhatsApp, <strong>~5 son marcadas como "ganadas" en el CRM</strong> y <strong>~10 terminan registradas en el sistema clínico</strong>. Este es el ratio real de conversión lead → paciente, dato clave para evaluar la rentabilidad de los anuncios.
+          💡 <strong>Conclusión:</strong> de cada 100 personas que ven un anuncio y escriben por WhatsApp, <strong>~8 son marcadas como "ganadas" en el CRM</strong> y <strong>~13 terminan con cita atribuida en el sistema clínico</strong>. Este es el ratio real de conversión lead → paciente, dato clave para evaluar la rentabilidad de los anuncios.
         </div>
       </div>
     </div>
