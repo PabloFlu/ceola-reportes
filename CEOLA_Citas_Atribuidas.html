@@ -1084,21 +1084,22 @@ init();
     function buildLagData(filterMes) {
       const order = {Febrero:1, Marzo:2, Abril:3};
       const result = {Febrero:0, Marzo:0, Abril:0};
+      let excluded = 0;
       ROWS.forEach(r => {
         if(filterMes && r.Mes_Cita !== filterMes) return;
         const contactMes = monthOf(r.Fecha_Contacto_WA);
-        if(order[contactMes] > order[r.Mes_Cita]) return;
+        if(order[contactMes] > order[r.Mes_Cita]) { excluded++; return; }
         result[contactMes]++;
       });
       const total = Object.values(result).reduce((a,b)=>a+b,0);
-      return { data: months.map(m=>result[m]), total };
+      return { data: months.map(m=>result[m]), total, excluded };
     }
 
     window.updateLag = function(btn) {
       document.querySelectorAll('.lag-btn').forEach(b=>b.classList.remove('lag-active'));
       btn.classList.add('lag-active');
       const m = btn.getAttribute('data-m');
-      const { data, total } = buildLagData(m);
+      const { data, total, excluded } = buildLagData(m);
       const label = m || 'todos los meses';
 
       if(chart3) chart3.destroy();
@@ -1138,8 +1139,9 @@ init();
         const n = data[months.indexOf(cm)];
         return n>0 ? n+' contactaron en '+cm : null;
       }).filter(Boolean);
-      document.getElementById('lagNote').textContent =
-        total + ' cita' + (total!==1?'s':'') + ' en mes '+(m||'cualquier mes')+': '+parts.join(', ')+'.';
+      let note = total + ' cita' + (total!==1?'s':'') + ' en '+(m?'mes de '+m:'todos los meses')+': '+parts.join(', ')+'.';
+      if(excluded>0) note += ' ('+excluded+' cita'+(excluded!==1?'s':'')+' excluida'+(excluded!==1?'s':'')+': contacto registrado después de la cita)';
+      document.getElementById('lagNote').textContent = note;
     };
 
     updateLag(document.querySelector('.lag-btn'));
