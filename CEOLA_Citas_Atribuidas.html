@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CEOLA — Citas Atribuidas a Anuncios Meta</title>
+<style>
+  :root {
+    --dark:   #0B1F3A;
+    --teal:   #00897B;
+    --cyan:   #00ACC1;
+    --amber:  #FFA000;
+    --red:    #EF5350;
+    --green:  #43A047;
+    --purple: #7B1FA2;
+    --bg:     #F5F7FA;
+    --card:   #FFFFFF;
+    --border: #E0E7EF;
+    --text:   #1A2B45;
+    --muted:  #6B7A8D;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); }
+
+  /* Header */
+  .header {
+    background: var(--dark);
+    color: white;
+    padding: 24px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .header h1 { font-size: 1.4rem; font-weight: 700; letter-spacing: -0.3px; }
+  .header p { font-size: 0.82rem; opacity: 0.65; margin-top: 4px; }
+  .header .badge {
+    background: var(--teal);
+    color: white;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.78rem;
+    font-weight: 600;
+  }
+
+  .container { max-width: 1400px; margin: 0 auto; padding: 28px 24px; }
+
+  /* KPI cards */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+  .kpi-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 20px;
+    text-align: center;
+  }
+  .kpi-card .val { font-size: 2rem; font-weight: 800; line-height: 1; }
+  .kpi-card .lbl { font-size: 0.72rem; color: var(--muted); margin-top: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .kpi-card .sub { font-size: 0.78rem; color: var(--muted); margin-top: 4px; }
+
+  /* Methodology info box */
+  .info-box {
+    background: #E3F2FD;
+    border: 1px solid #90CAF9;
+    border-left: 4px solid var(--cyan);
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin-bottom: 24px;
+    font-size: 0.85rem;
+    line-height: 1.6;
+  }
+  .info-box strong { color: var(--dark); }
+  .info-box .steps {
+    display: flex;
+    gap: 0;
+    margin-top: 12px;
+    flex-wrap: wrap;
+  }
+  .step {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .step-box {
+    background: var(--dark);
+    color: white;
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-align: center;
+    min-width: 120px;
+  }
+  .step-box .step-num { font-size: 0.65rem; opacity: 0.6; display: block; }
+  .step-arrow { color: var(--cyan); font-size: 1.4rem; font-weight: 300; padding: 0 4px; }
+
+  /* Filters */
+  .filters-panel {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin-bottom: 20px;
+  }
+  .filters-panel h3 { font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.6px; color: var(--muted); margin-bottom: 14px; }
+  .filters-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    align-items: end;
+  }
+  .filter-group label { display: block; font-size: 0.75rem; color: var(--muted); margin-bottom: 5px; font-weight: 600; }
+  .filter-group select, .filter-group input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 0.84rem;
+    background: white;
+    color: var(--text);
+    outline: none;
+    cursor: pointer;
+  }
+  .filter-group select:focus, .filter-group input:focus {
+    border-color: var(--cyan);
+    box-shadow: 0 0 0 2px rgba(0,172,193,0.15);
+  }
+  .btn-clear {
+    padding: 8px 18px;
+    background: var(--dark);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.82rem;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background 0.2s;
+  }
+  .btn-clear:hover { background: var(--teal); }
+
+  /* Result count */
+  .result-count {
+    font-size: 0.82rem;
+    color: var(--muted);
+    margin-bottom: 12px;
+    padding: 0 4px;
+  }
+  .result-count strong { color: var(--teal); }
+
+  /* Summary table */
+  .section-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--dark);
+    margin: 28px 0 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-title::before {
+    content: '';
+    display: inline-block;
+    width: 4px;
+    height: 18px;
+    background: var(--teal);
+    border-radius: 2px;
+  }
+
+  .table-wrap { overflow-x: auto; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+  table { width: 100%; border-collapse: collapse; background: var(--card); font-size: 0.83rem; }
+  thead th {
+    background: var(--dark);
+    color: white;
+    padding: 12px 14px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+  }
+  thead th:hover { background: #1a3a5c; }
+  thead th .sort-icon { margin-left: 4px; opacity: 0.5; }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; }
+  tbody tr:hover { background: #F0F7FF; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody td { padding: 10px 14px; vertical-align: middle; }
+
+  /* Badges */
+  .badge-service {
+    display: inline-block;
+    padding: 3px 9px;
+    border-radius: 12px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .badge-consulta { background: #E3F2FD; color: #1565C0; }
+  .badge-examen   { background: #FFF8E1; color: #E65100; }
+  .badge-pabellon { background: #F3E5F5; color: #6A1B9A; }
+
+  .badge-status {
+    display: inline-block;
+    padding: 3px 9px;
+    border-radius: 12px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .status-atendido   { background: #E8F5E9; color: #2E7D32; }
+  .status-agendado   { background: #E3F2FD; color: #1565C0; }
+  .status-cancelado  { background: #FFEBEE; color: #B71C1C; }
+  .status-recepcion  { background: #E0F2F1; color: #00695C; }
+  .status-otro       { background: #F5F5F5; color: #616161; }
+
+  .badge-ad { font-size: 0.72rem; color: var(--muted); }
+
+  /* Sticky ad column */
+  #detailTable th:first-child,
+  #detailTable td:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    background: white;
+    box-shadow: 2px 0 6px rgba(0,0,0,0.07);
+    min-width: 180px;
+    max-width: 220px;
+  }
+  #detailTable thead th:first-child {
+    background: var(--dark);
+    z-index: 3;
+  }
+  tbody tr:hover td:first-child { background: #F0F7FF; }
+
+  /* Ad name badge */
+  .ad-badge {
+    display: inline-block;
+    background: #EEF2FF;
+    color: #3730A3;
+    border: 1px solid #C7D2FE;
+    border-radius: 6px;
+    padding: 4px 9px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    line-height: 1.3;
+    white-space: normal;
+    word-break: break-word;
+  }
+
+  /* Summary mini-table */
+  .summary-table thead th { font-size: 0.72rem; }
+  .summary-table td { font-size: 0.82rem; }
+  .summary-table td:first-child { font-weight: 600; }
+  .bar-cell { min-width: 120px; }
+  .bar-bg { background: #E8F0FE; border-radius: 4px; height: 8px; overflow: hidden; }
+  .bar-fill { background: var(--teal); height: 100%; border-radius: 4px; transition: width 0.3s; }
+
+  /* Pagination */
+  .pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 16px;
+    padding: 0 4px;
+  }
+  .page-info { font-size: 0.8rem; color: var(--muted); }
+  .page-btns { display: flex; gap: 8px; }
+  .page-btn {
+    padding: 6px 14px;
+    border: 1px solid var(--border);
+    background: white;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    color: var(--text);
+    transition: all 0.15s;
+  }
+  .page-btn:hover:not(:disabled) { background: var(--dark); color: white; border-color: var(--dark); }
+  .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .page-btn.active { background: var(--teal); color: white; border-color: var(--teal); }
+
+  /* Export button */
+  .export-btn {
+    padding: 8px 18px;
+    background: var(--teal);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.82rem;
+    cursor: pointer;
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .export-btn:hover { background: #00796B; }
+
+  .flex-between { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+
+  @media (max-width: 600px) {
+    .header { flex-direction: column; gap: 12px; text-align: center; }
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    .step-box { min-width: 90px; }
+  }
+</style>
+</head>
+<body>
+<!-- PASSWORD GATE -->
+<div id="pw-gate" style="position:fixed;inset:0;z-index:9999;background:#0B1F3A;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:24px;">
+  <div style="text-align:center;color:white;">
+    <div style="font-size:13px;letter-spacing:3px;text-transform:uppercase;color:#00ACC1;margin-bottom:8px;">CEOLA VIÑA DEL MAR</div>
+    <div style="font-size:22px;font-weight:700;margin-bottom:4px;">Reporte de Atribución</div>
+    <div style="font-size:14px;color:#8EAFC2;">Documento confidencial — ingresa la clave de acceso</div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:12px;align-items:center;">
+    <input id="pw-input" type="password" placeholder="Clave de acceso"
+      style="padding:12px 20px;border-radius:8px;border:2px solid #1E4060;background:#0F2A45;color:white;font-size:16px;width:260px;outline:none;text-align:center;"
+      onkeydown="if(event.key==='Enter')checkPW()">
+    <button onclick="checkPW()"
+      style="padding:12px 40px;background:#00897B;color:white;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;width:260px;">
+      Ingresar
+    </button>
+    <div id="pw-err" style="color:#EF5350;font-size:13px;display:none;">Clave incorrecta. Intenta nuevamente.</div>
+  </div>
+</div>
+<script>
+(function(){
+  if(sessionStorage.getItem('ceola_auth')==='1'){document.getElementById('pw-gate').style.display='none';}
+  window.checkPW=function(){
+    var v=document.getElementById('pw-input').value;
+    if(v==='ceolafluvo26'){sessionStorage.setItem('ceola_auth','1');document.getElementById('pw-gate').style.display='none';}
+    else{document.getElementById('pw-err').style.display='block';document.getElementById('pw-input').value='';document.getElementById('pw-input').focus();}
+  };
+})();
+</script>
+
+<div class="header">
+  <div>
+    <h1>CEOLA — Citas Atribuidas a Anuncios Meta</h1>
+    <p>Período: 1 Febrero – 14 Abril 2026 · Metodología: CRM Vambee → Detalle Pacientes → Sistema Clínico</p>
+  </div>
+  <span class="badge">Análisis de Atribución</span>
+</div>
+
+<div class="container">
+
+  <!-- Sources Summary -->
+  <div style="background:white;border:1px solid #E0E7EF;border-radius:12px;padding:20px 24px;margin-bottom:20px">
+    <div style="font-size:0.78rem;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:#6B7A8D;margin-bottom:14px">📁 Documentos utilizados en este análisis</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px">
+
+      <div style="border:1px solid #C7D2FE;border-left:4px solid #3730A3;border-radius:8px;padding:12px 16px;background:#EEF2FF">
+        <div style="font-size:0.8rem;font-weight:700;color:#3730A3;margin-bottom:4px">📲 CRM Vambee — WhatsApp entrantes</div>
+        <div style="font-size:0.75rem;color:#4338CA;margin-bottom:6px">Whatsapp entrantes en CEOLA 1-feb 2026 a 14 abril 2026.csv</div>
+        <div style="font-size:0.75rem;color:#374151;line-height:1.6">
+          📅 <strong>1 Feb 2026 → 14 Abr 2026</strong><br>
+          👤 1.617 contactos reales · 807 con código de anuncio · 810 orgánicos<br>
+          🔑 Campo clave: <code>utmCampaignId</code> = ID del anuncio Meta<br>
+          ✅ Incluye anuncios <strong>activos y pausados</strong> (captura al momento del clic)
+        </div>
+      </div>
+
+      <div style="border:2px solid #EF5350;border-left:4px solid #B71C1C;border-radius:8px;padding:12px 16px;background:#FFEBEE">
+        <div style="font-size:0.8rem;font-weight:700;color:#B71C1C;margin-bottom:4px">🗂️ Detalle de Pacientes — Archivo puente</div>
+        <div style="font-size:0.73rem;color:#C62828;margin-bottom:6px">Detalle de pacientes Febrero Abril.xlsx</div>
+        <div style="font-size:0.75rem;color:#374151;line-height:1.6">
+          📅 <strong>1 Feb 2026 → 31 Mar 2026</strong><br>
+          👤 1.733 pacientes registrados<br>
+          🔑 Vincula Teléfono ↔ RUT (identificador clínico)<br>
+          🔴 <strong>ANÁLISIS VÁLIDO SOLO HASTA EL 31 DE MARZO</strong> — pacientes nuevos de Abril no están en este archivo y no se pueden cruzar con citas
+        </div>
+      </div>
+
+      <div style="border:1px solid #A7F3D0;border-left:4px solid #059669;border-radius:8px;padding:12px 16px;background:#ECFDF5">
+        <div style="font-size:0.8rem;font-weight:700;color:#065F46;margin-bottom:4px">🏥 Sistema Clínico — Citas</div>
+        <div style="font-size:0.75rem;color:#047857;margin-bottom:6px">Citas recibidas desde febrero a abril.xlsx</div>
+        <div style="font-size:0.75rem;color:#374151;line-height:1.6">
+          📅 <strong>1 Feb 2026 → 14 Abr 2026</strong><br>
+          📋 5.367 citas totales: 3.470 Consultas · 1.130 Exámenes · 767 Pabellón<br>
+          🔑 Campo clave: <code>RUN/DNI_Paciente</code> = RUT del paciente<br>
+          ✅ Estados: Atendido (2.443) · Recepcionado (860) · Cancelada (814) · Agendado (248)
+        </div>
+      </div>
+
+    </div>
+    <div style="margin-top:12px;font-size:0.73rem;color:#6B7A8D;border-top:1px dashed #E5E7EB;padding-top:10px">
+      ⚠️ <strong>Limitación principal:</strong> El Detalle de Pacientes solo cubre hasta el 31 de Marzo. Pacientes que contactaron en Abril y no tenían registro previo no pueden ser cruzados → el número real de pacientes atribuidos puede ser mayor. · Análisis generado: Mayo 2026
+    </div>
+  </div>
+
+  <!-- Info Box -->
+  <div class="info-box">
+    <strong>Metodología de atribución:</strong> Se cruzaron las 3 bases de datos disponibles para identificar pacientes que llegaron desde un anuncio Meta y luego agendaron cita en CEOLA. El CRM Vambee tiene <strong>1.617 contactos reales</strong> en el período (el CSV tiene 1.861 líneas porque algunos mensajes incluyen saltos de línea internos).
+    <div class="steps">
+      <div class="step">
+        <div class="step-box"><span class="step-num">PASO 1</span>CRM Vambee<br><small>807 con código ad</small></div>
+        <div class="step-arrow">→</div>
+      </div>
+      <div class="step">
+        <div class="step-box"><span class="step-num">PASO 2</span>Detalle Pacientes<br><small>Teléfono → RUT</small></div>
+        <div class="step-arrow">→</div>
+      </div>
+      <div class="step">
+        <div class="step-box"><span class="step-num">PASO 3</span>Sistema Clínico<br><small>RUT → Citas</small></div>
+        <div class="step-arrow">→</div>
+      </div>
+      <div class="step">
+        <div class="step-box" style="background:var(--teal)"><span class="step-num">RESULTADO</span>66 pacientes<br><small>96 citas atribuidas</small></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- KPI Cards -->
+  <div class="kpi-grid" id="kpiGrid">
+    <div class="kpi-card">
+      <div class="val" style="color:var(--teal)">66</div>
+      <div class="lbl">Pacientes únicos</div>
+      <div class="sub">Llegaron de ads Meta</div>
+    </div>
+    <div class="kpi-card">
+      <div class="val" style="color:var(--cyan)">96</div>
+      <div class="lbl">Citas totales</div>
+      <div class="sub">Atribuidas a anuncios</div>
+    </div>
+    <div class="kpi-card">
+      <div class="val" style="color:var(--purple)">9</div>
+      <div class="lbl">Anuncios con resultado</div>
+      <div class="sub">De 16 activos</div>
+    </div>
+    <div class="kpi-card">
+      <div class="val" style="color:var(--amber)">1.5x</div>
+      <div class="lbl">Citas/paciente prom.</div>
+      <div class="sub">96 / 66</div>
+    </div>
+    <div class="kpi-card">
+      <div class="val" style="color:var(--green)" id="kpiAtend">–</div>
+      <div class="lbl">Atendidos</div>
+      <div class="sub">Citas confirmadas</div>
+    </div>
+    <div class="kpi-card">
+      <div class="val" style="color:var(--dark)" id="kpiAtrPct">1.8%</div>
+      <div class="lbl">De citas totales</div>
+      <div class="sub">96 / 5.367 del sistema</div>
+    </div>
+  </div>
+
+  <!-- Red alert: March 31 cutoff -->
+  <div style="background:#FFEBEE;border:2px solid #EF5350;border-radius:10px;padding:14px 20px;margin-bottom:16px;font-size:0.84rem;color:#B71C1C;font-weight:700;display:flex;align-items:flex-start;gap:10px">
+    <span style="font-size:1.3rem;flex-shrink:0">🔴</span>
+    <span>LÍMITE DEL ARCHIVO PUENTE: El "Detalle de Pacientes" contiene solo pacientes que se <strong>registraron por primera vez entre el 1 Feb y el 31 Mar 2026</strong>. Esto tiene dos efectos: (1) pacientes que se registraron por primera vez en Abril no están en el puente y sus citas no se pueden atribuir; (2) pacientes que ya eran clientes antes de Febrero tampoco están. <strong>Importante:</strong> citas de Abril de pacientes que sí están en el puente (registrados Feb-Mar) sí quedan capturadas — de hecho hay 43 citas de Abril en el conjunto atribuido. El número total de pacientes y citas reales atribuidas a anuncios es mayor al reportado.</span>
+  </div>
+
+  <!-- Funnel & Pabellón context -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px;margin-bottom:20px">
+
+    <!-- Lead conversion funnel -->
+    <div style="background:white;border:1px solid #E0E7EF;border-radius:10px;padding:18px 20px">
+      <div style="font-size:0.85rem;font-weight:700;color:#0B1F3A;margin-bottom:14px">📊 Funnel de conversión — 757 leads únicos con anuncio</div>
+      <div style="font-size:0.8rem;color:#374151;margin-bottom:12px">
+        ¿Por qué solo 74 de 757 cruzaron con el sistema clínico? Aquí el desglose real de los <strong>683 que no cruzaron</strong>:
+      </div>
+      <!-- Table -->
+      <table style="width:100%;border-collapse:collapse;font-size:0.79rem">
+        <thead>
+          <tr style="background:#F0F4F8">
+            <th style="padding:7px 10px;text-align:left;font-weight:700;color:#374151;border-radius:6px 0 0 0">Razón</th>
+            <th style="padding:7px 10px;text-align:center;font-weight:700;color:#374151">Cantidad</th>
+            <th style="padding:7px 10px;text-align:center;font-weight:700;color:#374151;border-radius:0 6px 0 0">%</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-bottom:1px solid #F0F4F8">
+            <td style="padding:8px 10px"><span style="color:#B71C1C;font-weight:700">Lost en CRM</span> — consultaron por WA pero nunca agendaron ni llegaron</td>
+            <td style="padding:8px 10px;text-align:center;font-weight:700;color:#B71C1C">507</td>
+            <td style="padding:8px 10px;text-align:center;color:#B71C1C;font-weight:600">74%</td>
+          </tr>
+          <tr style="border-bottom:1px solid #F0F4F8">
+            <td style="padding:8px 10px"><span style="color:#1565C0;font-weight:700">Pending en CRM</span> — aún en pipeline, pueden convertir después</td>
+            <td style="padding:8px 10px;text-align:center;font-weight:700;color:#1565C0">159</td>
+            <td style="padding:8px 10px;text-align:center;color:#1565C0;font-weight:600">23%</td>
+          </tr>
+          <tr>
+            <td style="padding:8px 10px"><span style="color:#2E7D32;font-weight:700">Won + atendidos en Vambee, sin cruce</span> — agendaron y asistieron según CRM, pero la mayoría contactó en Abril (fuera del rango del DP)</td>
+            <td style="padding:8px 10px;text-align:center;font-weight:700;color:#2E7D32">17</td>
+            <td style="padding:8px 10px;text-align:center;color:#2E7D32;font-weight:600">3%</td>
+          </tr>
+        </tbody>
+      </table>
+      <div style="margin-top:14px;padding-top:12px;border-top:1px dashed #E0E7EF">
+        <div style="font-size:0.78rem;font-weight:700;color:#0B1F3A;margin-bottom:8px">Visión completa de los 757 leads con anuncio:</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <div style="background:#FFEBEE;border-radius:8px;padding:8px 14px;text-align:center;flex:1;min-width:90px">
+            <div style="font-size:1.1rem;font-weight:800;color:#B71C1C">537</div>
+            <div style="font-size:0.68rem;color:#B71C1C;font-weight:600">LOST · 71%</div>
+            <div style="font-size:0.67rem;color:#6B7A8D">No convirtieron</div>
+          </div>
+          <div style="background:#E3F2FD;border-radius:8px;padding:8px 14px;text-align:center;flex:1;min-width:90px">
+            <div style="font-size:1.1rem;font-weight:800;color:#1565C0">181</div>
+            <div style="font-size:0.68rem;color:#1565C0;font-weight:600">PENDING · 24%</div>
+            <div style="font-size:0.67rem;color:#6B7A8D">En proceso</div>
+          </div>
+          <div style="background:#E8F5E9;border-radius:8px;padding:8px 14px;text-align:center;flex:1;min-width:90px">
+            <div style="font-size:1.1rem;font-weight:800;color:#2E7D32">39</div>
+            <div style="font-size:0.68rem;color:#2E7D32;font-weight:600">WON · 5%</div>
+            <div style="font-size:0.67rem;color:#6B7A8D">Ganados en CRM</div>
+          </div>
+        </div>
+        <div style="margin-top:10px;font-size:0.75rem;color:#4A5568;line-height:1.6;background:#F8FAFC;border-radius:8px;padding:10px 12px">
+          💡 <strong>Conclusión:</strong> de cada 100 personas que ven un anuncio y escriben por WhatsApp, <strong>~5 son marcadas como "ganadas" en el CRM</strong> y <strong>~10 terminan registradas en el sistema clínico</strong>. Este es el ratio real de conversión lead → paciente, dato clave para evaluar la rentabilidad de los anuncios.
+        </div>
+      </div>
+    </div>
+
+    <!-- Pabellón context -->
+    <div style="background:white;border:1px solid #E0E7EF;border-radius:10px;padding:18px 20px">
+      <div style="font-size:0.85rem;font-weight:700;color:#0B1F3A;margin-bottom:14px">🏥 Por qué solo 1 pabellón aparece atribuido (de 767 en el período)</div>
+      <div style="font-size:0.79rem;color:#374151;line-height:1.8">
+        Esto <strong>no significa</strong> que los ads no generan cirugías. Hay dos razones estructurales:
+      </div>
+      <div style="margin-top:12px;display:flex;flex-direction:column;gap:10px">
+        <div style="background:#FFF8E1;border-left:3px solid #FFA000;border-radius:6px;padding:10px 14px;font-size:0.79rem;color:#4A3600;line-height:1.6">
+          <strong>⏳ El embudo de una cirugía es largo:</strong> un paciente que vio un anuncio de Lasik u Oculoplastia en Febrero primero agenda una <em>consulta</em> → luego <em>exámenes</em> → luego <em>pabellón</em>. Ese ciclo puede tardar 1 a 3 meses. La consulta queda dentro del período de análisis, pero la cirugía puede quedar fuera.
+        </div>
+        <div style="background:#FFEBEE;border-left:3px solid #EF5350;border-radius:6px;padding:10px 14px;font-size:0.79rem;color:#B71C1C;line-height:1.6">
+          <strong>🔴 Detalle Pacientes solo llega al 31 de Marzo:</strong> pacientes que llegaron por ads en Febrero–Marzo y agendaron su cirugía en Abril no están en el archivo puente → su pabellón no se puede atribuir. Este es el caso más probable para ads de Lasik.
+        </div>
+        <div style="background:#F3E5F5;border-left:3px solid #7B1FA2;border-radius:6px;padding:10px 14px;font-size:0.79rem;color:#4A148C;line-height:1.6">
+          <strong>📋 Distribución del sistema completo:</strong><br>
+          3.470 Consultas · 1.130 Exámenes · <strong>767 Pabellón</strong><br>
+          Atribuidas a ads: 81 Consultas · 14 Exámenes · <strong>1 Pabellón</strong>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Organic traffic note -->
+  <div style="background:#FFEBEE;border:2px solid #EF5350;border-left:4px solid #B71C1C;border-radius:10px;padding:16px 20px;margin-bottom:20px;font-size:0.82rem;line-height:1.8;color:#3D0000">
+    <strong style="font-size:0.88rem">🔴 Los 810 contactos orgánicos (sin código de anuncio) no son necesariamente espontáneos</strong><br>
+    Al revisar el origen de los contactos sin UTM en el CRM, se identificaron <strong>3 canales distintos</strong>:
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-top:12px;margin-bottom:12px">
+      <div style="background:#FFCDD2;border-radius:8px;padding:10px 14px;text-align:center">
+        <div style="font-size:1.2rem;font-weight:800;color:#B71C1C">696</div>
+        <div style="font-size:0.72rem;font-weight:700;color:#B71C1C">WhatsApp directo</div>
+        <div style="font-size:0.69rem;color:#7B1C1C;margin-top:2px">Vieron el número en algún lado (Google, web, de boca en boca) y escribieron directo</div>
+      </div>
+      <div style="background:#FCE4EC;border-radius:8px;padding:10px 14px;text-align:center">
+        <div style="font-size:1.2rem;font-weight:800;color:#880E4F">82</div>
+        <div style="font-size:0.72rem;font-weight:700;color:#880E4F">Instagram orgánico</div>
+        <div style="font-size:0.69rem;color:#880E4F;margin-top:2px">Contacto iniciado desde Instagram — probablemente link en bio o perfil de @ceola_vinadelmar</div>
+      </div>
+      <div style="background:#F3E5F5;border-radius:8px;padding:10px 14px;text-align:center">
+        <div style="font-size:1.2rem;font-weight:800;color:#6A1B9A">32</div>
+        <div style="font-size:0.72rem;font-weight:700;color:#6A1B9A">Facebook Messenger</div>
+        <div style="font-size:0.69rem;color:#6A1B9A;margin-top:2px">Mensajes por Messenger desde la página de Facebook de CEOLA</div>
+      </div>
+    </div>
+    <strong>¿Por qué importa?</strong> Los <strong>82 contactos de Instagram orgánico</strong> probablemente provienen del link en bio de @ceola_vinadelmar — que podría estar asociado a la campaña de Tráfico o a seguidores que llegan por los Reels. Sin UTM en ese link, no es posible saber si vinieron de un anuncio, de un Reel orgánico, o de búsqueda directa del perfil.<br><br>
+    <strong>Oportunidad de mejora:</strong> agregar parámetros UTM al link en bio de Instagram permitiría atribuir esos 82 contactos (y los futuros) a su fuente real. Adicionalmente, el volumen de mensajes iniciados desde Instagram es un indicador de la efectividad orgánica del perfil que vale la pena monitorear por separado.
+  </div>
+
+  <!-- Summary Table -->
+  <div class="section-title">Resumen por Anuncio</div>
+  <div class="table-wrap">
+    <table class="summary-table" id="summaryTable">
+      <thead>
+        <tr>
+          <th>Anuncio</th>
+          <th>Campaña</th>
+          <th>Estado</th>
+          <th>Pacientes Únicos</th>
+          <th>Total Citas</th>
+          <th>Consultas</th>
+          <th>Exámenes</th>
+          <th>Pabellón</th>
+          <th>Atendidos</th>
+          <th>Agendados</th>
+          <th>Cancelados</th>
+          <th>Distribución</th>
+        </tr>
+      </thead>
+      <tbody id="summaryBody"></tbody>
+    </table>
+  </div>
+
+  <!-- Detail Table -->
+  <div class="flex-between" style="margin-top:32px">
+    <div class="section-title" style="margin:0">Detalle por Cita Atribuida</div>
+    <button class="export-btn" onclick="exportCSV()">⬇ Exportar CSV</button>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters-panel" style="margin-top:14px">
+    <h3>Filtros</h3>
+    <div class="filters-grid">
+      <div class="filter-group">
+        <label>Anuncio</label>
+        <select id="filterAd" onchange="applyFilters()">
+          <option value="">Todos los anuncios</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Campaña</label>
+        <select id="filterCampaign" onchange="applyFilters()">
+          <option value="">Todas las campañas</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Tipo de Servicio</label>
+        <select id="filterService" onchange="applyFilters()">
+          <option value="">Todos los tipos</option>
+          <option value="Consulta Médica">Consulta Médica</option>
+          <option value="Examen">Examen</option>
+          <option value="Pabellón (Cirugía)">Pabellón (Cirugía)</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Mes de la Cita</label>
+        <select id="filterMonth" onchange="applyFilters()">
+          <option value="">Todos los meses</option>
+          <option value="Febrero">Febrero</option>
+          <option value="Marzo">Marzo</option>
+          <option value="Abril">Abril</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Estado de la Cita</label>
+        <select id="filterStatus" onchange="applyFilters()">
+          <option value="">Todos los estados</option>
+          <option value="Atendido">Atendido</option>
+          <option value="Recepcionado">Recepcionado</option>
+          <option value="Agendado">Agendado/Pendiente</option>
+          <option value="Cancelado">Cancelado</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Buscar paciente / RUT</label>
+        <input type="text" id="filterSearch" placeholder="Nombre o RUT..." oninput="applyFilters()">
+      </div>
+      <div class="filter-group">
+        <label>&nbsp;</label>
+        <button class="btn-clear" onclick="clearFilters()">Limpiar filtros</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="result-count" id="resultCount"></div>
+
+  <div class="table-wrap">
+    <table id="detailTable">
+      <thead>
+        <tr>
+          <th onclick="sortBy('Nombre_Anuncio')">Anuncio <span class="sort-icon">↕</span></th>
+          <th onclick="sortBy('Campaña')">Campaña <span class="sort-icon">↕</span></th>
+          <th onclick="sortBy('Nombre_Paciente')">Paciente <span class="sort-icon">↕</span></th>
+          <th>RUT</th>
+          <th onclick="sortBy('Tipo_Servicio')">Tipo Servicio <span class="sort-icon">↕</span></th>
+          <th onclick="sortBy('Fecha_Cita')">Fecha Cita <span class="sort-icon">↕</span></th>
+          <th onclick="sortBy('Mes_Cita')">Mes <span class="sort-icon">↕</span></th>
+          <th onclick="sortBy('Estado_Cita_Grupo')">Estado Cita <span class="sort-icon">↕</span></th>
+          <th>Especialidad</th>
+          <th>Primera Cita</th>
+          <th>Fecha Contacto WA</th>
+        </tr>
+      </thead>
+      <tbody id="detailBody"></tbody>
+    </table>
+  </div>
+
+  <div class="pagination" id="pagination">
+    <div class="page-info" id="pageInfo"></div>
+    <div class="page-btns" id="pageBtns"></div>
+  </div>
+
+</div>
+
+<script>
+// ─── Data ─────────────────────────────────────────────────────────────────
+const ROWS = [{"RUT":"9497712-6","Nombre_Paciente":"Cristina Jesus Sanhueza Ramos","ID_Anuncio":"120245316132370029","Nombre_Anuncio":"Lasik - De ver mal a nítido","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-02-21","Etapa_CRM":"Proceso  de Agendamiento","ID_Cita":"672289","Tipo_Servicio":"Consulta Médica","Tipo_Agenda":"Consultas","Fecha_Cita":"02-03-2026","Mes_Cita":"Marzo","Estado_Cita":"Falta sin aviso","Estado_Cita_Grupo":"Otro","Especialidad":"Oftalmología","Profesional":"Pablo Riquelme","Primera_Cita":"SI","Prestaciones":""},{"RUT":"6503393-3","Nombre_Paciente":"PABLO ZAMORA DONOSO","ID_Anuncio":"120245316132370029","Nombre_Anuncio":"Lasik - De ver mal a nítido","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-02-22","Etapa_CRM":"Proceso  de Agendamiento","ID_Cita":"672560","Tipo_Servicio":"Consulta Médica","Tipo_Agenda":"Consultas","Fecha_Cita":"03-03-2026","Mes_Cita":"Marzo","Estado_Cita":"Falta sin aviso","Estado_Cita_Grupo":"Otro","Especialidad":"Oftalmología","Profesional":"Fernando Chamorro Quezada","Primera_Cita":"SI","Prestaciones":""},{"RUT":"7853833-3","Nombre_Paciente":"margarita veronica hidalgo jimenez","ID_Anuncio":"120245471522520029","Nombre_Anuncio":"Lasik - Proceso","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-02-24","Etapa_CRM":"Agendados","ID_Cita":"673486","Tipo_Servicio":"Consulta Médica","Tipo_Agenda":"Consultas","Fecha_Cita":"13-03-2026","Mes_Cita":"Marzo","Estado_Cita":"Cancelada","Estado_Cita_Grupo":"Cancelado","Especialidad":"Oftalmología","Profesional":"Fernando Chamorro Quezada","Primera_Cita":"SI","Prestaciones":""},{"RUT":"7853833-3","Nombre_Paciente":"margarita veronica hidalgo jimenez","ID_Anuncio":"120245471522520029","Nombre_Anuncio":"Lasik - Proceso","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-02-24","Etapa_CRM":"Agendados","ID_Cita":"673488","Tipo_Servicio":"Consulta Médica","Tipo_Agenda":"Consultas","Fecha_Cita":"20-03-2026","Mes_Cita":"Marzo","Estado_Cita":"Falta sin aviso","Estado_Cita_Grupo":"Otro","Especialidad":"Oftalmología","Profesional":"Fernando Chamorro Quezada","Primera_Cita":"NO","Prestaciones":"0101204_15183793K - Consulta Médica Oftalmología CHAMORRO QUEZADA FERNANDO, "},{"RUT":"26679568-8","Nombre_Paciente":"Isabella Antonia Moreno Carmona","ID_Anuncio":"120245683201690029","Nombre_Anuncio":"Oculoplastia - Bulto en el párpado","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-02-28","Etapa_CRM":"Proceso  de Agendamiento","ID_Cita":"673120","Tipo_Servicio":"Consulta Médica","Tipo_Agenda":"Consultas","Fecha_Cita":"05-03-2026","Mes_Cita":"Marzo","Estado_Cita":"Atendido","Estado_Cita_Grupo":"Atendido","Especialidad":"Oftalmología","Profesional":"Xi Rao","Primera_Cita":"NO","Prestaciones":"0101204_146480896 - Consulta Médica Oftalmología RAO XI, 0101204_146480896 - Consulta Médica Oftalmología RAO XI, "},{"RUT":"26679568-8","Nombre_Paciente":"Isabella Antonia Moreno Carmona","ID_Anuncio":"120245683201690029","Nombre_Anuncio":"Oculoplastia - Bulto en el párpado","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-02-28","Etapa_CRM":"Proceso  de Agendamiento","ID_Cita":"672577","Tipo_Servicio":"Consulta Médica","Tipo_Agenda":"Consultas","Fecha_Cita":"12-03-2026","Mes_Cita":"Marzo","Estado_Cita":"Cancelada","Estado_Cita_Grupo":"Cancelado","Especialidad":"Oftalmología","Profesional":"Daniel Navarrete Gómez","Primera_Cita":"SI","Prestaciones":""},{"RUT":"6157181-7","Nombre_Paciente":"JORGE ABELARDO VERGARA GONZALEZ","ID_Anuncio":"120245471522520029","Nombre_Anuncio":"Lasik - Proceso","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-03-03","Etapa_CRM":"Regendar / Cancelar","ID_Cita":"672781","Tipo_Servicio":"Consulta Médica","Tipo_Agenda":"Consultas","Fecha_Cita":"06-03-2026","Mes_Cita":"Marzo","Estado_Cita":"Falta sin aviso","Estado_Cita_Grupo":"Otro","Especialidad":"Oftalmología","Profesional":"Fernando Chamorro Quezada","Primera_Cita":"SI","Prestaciones":""},{"RUT":"8192079-6","Nombre_Paciente":"TATIANA DEL CARMEN VELASQUEZ MIRANDA","ID_Anuncio":"120245683482050029","Nombre_Anuncio":"General Ceola","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-03-03","Etapa_CRM":"Proceso  de Agendamiento","ID_Cita":"672807","Tipo_Servicio":"Consulta Médica","Tipo_Agenda":"Consultas","Fecha_Cita":"11-03-2026","Mes_Cita":"Marzo","Estado_Cita":"Falta sin aviso","Estado_Cita_Grupo":"Otro","Especialidad":"Oftalmología","Profesional":"Jorge Schwember Fernández","Primera_Cita":"SI","Prestaciones":""},{"RUT":"8522103-5","Nombre_Paciente":"Juan Carlos Saavedra  Saavedra","ID_Anuncio":"120245683482050029","Nombre_Anuncio":"General Ceola","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-03-03","Etapa_CRM":"Proceso  de Agendamiento","ID_Cita":"672705","Tipo_Servicio":"Consulta Médica","Tipo_Agenda":"Consultas","Fecha_Cita":"12-03-2026","Mes_Cita":"Marzo","Estado_Cita":"Atendido","Estado_Cita_Grupo":"Atendido","Especialidad":"Oftalmología","Profesional":"Daniel Navarrete Gómez","Primera_Cita":"SI","Prestaciones":"0101204_107671625 - Consulta Médica Oftalmología NAVARRETE GOMEZ DANIEL, "},{"RUT":"10535649-8","Nombre_Paciente":"Carlos Enrique Molina  Martinez","ID_Anuncio":"120245683482050029","Nombre_Anuncio":"General Ceola","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-03-03","Etapa_CRM":"Información y dudas generales","ID_Cita":"672831","Tipo_Servicio":"Consulta Médica","Tipo_Agenda":"Consultas","Fecha_Cita":"06-03-2026","Mes_Cita":"Marzo","Estado_Cita":"Falta sin aviso","Estado_Cita_Grupo":"Otro","Especialidad":"Oftalmología","Profesional":"Fernando Chamorro Quezada","Primera_Cita":"SI","Prestaciones":""},{"RUT":"14491458-9","Nombre_Paciente":"Jessica Anabella Carrillo Perez","ID_Anuncio":"120245683262350029","Nombre_Anuncio":"Oculoplastia - Cirugía Chalazión","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-03-05","Etapa_CRM":"Agendados","ID_Cita":"673967","Tipo_Servicio":"Consulta Médica","Tipo_Agenda":"Consultas","Fecha_Cita":"26-03-2026","Mes_Cita":"Marzo","Estado_Cita":"Falta sin aviso","Estado_Cita_Grupo":"Otro","Especialidad":"Oftalmología","Profesional":"Christian Fontecilla Molina","Primera_Cita":"SI","Prestaciones":""},{"RUT":"14491458-9","Nombre_Paciente":"Jessica Anabella Carrillo Perez","ID_Anuncio":"120245683262350029","Nombre_Anuncio":"Oculoplastia - Cirugía Chalazión","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-03-05","Etapa_CRM":"Agendados","ID_Cita":"675492","Tipo_Servicio":"Consulta Médica","Tipo_Agenda":"Consultas","Fecha_Cita":"02-04-2026","Mes_Cita":"Abril","Estado_Cita":"Atendido","Estado_Cita_Grupo":"Atendido","Especialidad":"Oftalmología","Profesional":"Christian Fontecilla Molina","Primera_Cita":"NO","Prestaciones":"0101204_100108046 - Consulta Médica Oftalmología FONTECILLA MOLINA CHRISTIAN, "},{"RUT":"9242346-8","Nombre_Paciente":"Lorenna Ossa Pérez","ID_Anuncio":"120245683201690029","Nombre_Anuncio":"Oculoplastia - Bulto en el párpado","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-03-05","Etapa_CRM":"Regendar / Cancelar","ID_Cita":"675220","Tipo_Servicio":"Consulta Médica","Tipo_Agenda":"Consultas","Fecha_Cita":"09-04-2026","Mes_Cita":"Abril","Estado_Cita":"Cancelada","Estado_Cita_Grupo":"Cancelado","Especialidad":"Oftalmología","Profesional":"Xi Rao","Primera_Cita":"SI","Prestaciones":""},{"RUT":"10315853-2","Nombre_Paciente":"Maria Ordenes Jorquera","ID_Anuncio":"120245683482050029","Nombre_Anuncio":"General Ceola","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-03-07","Etapa_CRM":"Agendados","ID_Cita":"674086","Tipo_Servicio":"Consulta Médica","Tipo_Agenda":"Consultas","Fecha_Cita":"19-03-2026","Mes_Cita":"Marzo","Estado_Cita":"Atendido","Estado_Cita_Grupo":"Atendido","Especialidad":"Oftalmología","Profesional":"Xi Rao","Primera_Cita":"SI","Prestaciones":"0101204_146480896 - Consulta Médica Oftalmología RAO XI, "},{"RUT":"8627479-5","Nombre_Paciente":"MONICA CLAVERO GENTOSO","ID_Anuncio":"120245683482050029","Nombre_Anuncio":"General Ceola","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-03-09","Etapa_CRM":"Regendar / Cancelar","ID_Cita":"675250","Tipo_Servicio":"Examen","Tipo_Agenda":"Exámenes","Fecha_Cita":"30-03-2026","Mes_Cita":"Marzo","Estado_Cita":"Agendado","Estado_Cita_Grupo":"Agendado","Especialidad":"Oftalmología","Profesional":"TM Tomás Ortiz Ponce","Primera_Cita":"NO","Prestaciones":""},{"RUT":"8627479-5","Nombre_Paciente":"MONICA ELIZABETH CLAVERO GENTOSO","ID_Anuncio":"120245683482050029","Nombre_Anuncio":"General Ceola","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-03-09","Etapa_CRM":"Regendar / Cancelar","ID_Cita":"675292","Tipo_Servicio":"Examen","Tipo_Agenda":"Exámenes","Fecha_Cita":"30-03-2026","Mes_Cita":"Marzo","Estado_Cita":"Recepcionado","Estado_Cita_Grupo":"Recepcionado","Especialidad":"Oftalmología","Profesional":"TM Daniela Vargas Fuentes","Primera_Cita":"NO","Prestaciones":"1201020 - Ecobiometría Optica IOL Master + Cálculo LIO, 1201020 - Ecobiometría Optica IOL Master + Cálculo LIO, "},{"RUT":"8627479-5","Nombre_Paciente":"MONICA ELIZABETH CLAVERO GENTOSO","ID_Anuncio":"120245683482050029","Nombre_Anuncio":"General Ceola","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-03-09","Etapa_CRM":"Regendar / Cancelar","ID_Cita":"675429","Tipo_Servicio":"Consulta Médica","Tipo_Agenda":"Consultas","Fecha_Cita":"02-04-2026","Mes_Cita":"Abril","Estado_Cita":"Cancelada","Estado_Cita_Grupo":"Cancelado","Especialidad":"Oftalmología","Profesional":"Daniel Braun","Primera_Cita":"NO","Prestaciones":""},{"RUT":"11607825-2","Nombre_Paciente":"María Teresa Canales Cornejo","ID_Anuncio":"120245683201690029","Nombre_Anuncio":"Oculoplastia - Bulto en el párpado","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-03-10","Etapa_CRM":"Proceso  de Agendamiento","ID_Cita":"673580","Tipo_Servicio":"Consulta Médica","Tipo_Agenda":"Consultas","Fecha_Cita":"12-03-2026","Mes_Cita":"Marzo","Estado_Cita":"Atendido","Estado_Cita_Grupo":"Atendido","Especialidad":"Oftalmología","Profesional":"Christian Fontecilla Molina","Primera_Cita":"SI","Prestaciones":"0101204_100108046 - Consulta Médica Oftalmología FONTECILLA MOLINA CHRISTIAN, "},{"RUT":"26842896-8","Nombre_Paciente":"Nidia Edilce Vargas","ID_Anuncio":"120245683482050029","Nombre_Anuncio":"General Ceola","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-03-11","Etapa_CRM":"Agendados","ID_Cita":"673759","Tipo_Servicio":"Consulta Médica","Tipo_Agenda":"Consultas","Fecha_Cita":"17-03-2026","Mes_Cita":"Marzo","Estado_Cita":"Cancelada","Estado_Cita_Grupo":"Cancelado","Especialidad":"Oftalmología","Profesional":"Fernando Chamorro Quezada","Primera_Cita":"SI","Prestaciones":""},{"RUT":"8260819-2","Nombre_Paciente":"Americo Navarro  Marchant","ID_Anuncio":"120245683482050029","Nombre_Anuncio":"General Ceola","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-03-12","Etapa_CRM":"Agendados","ID_Cita":"673732","Tipo_Servicio":"Consulta Médica","Tipo_Agenda":"Consultas","Fecha_Cita":"17-03-2026","Mes_Cita":"Marzo","Estado_Cita":"Atendido","Estado_Cita_Grupo":"Atendido","Especialidad":"Oftalmología","Profesional":"Maria Loreto Godoy Veliz","Primera_Cita":"SI","Prestaciones":"0101204_153779368 - Consulta Médica Oftalmología GODOY VELIZ LORETO, "},{"RUT":"8260819-2","Nombre_Paciente":"Americo Navarro  Marchant","ID_Anuncio":"120245683482050029","Nombre_Anuncio":"General Ceola","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-03-12","Etapa_CRM":"Agendados","ID_Cita":"674160","Tipo_Servicio":"Examen","Tipo_Agenda":"Exámenes","Fecha_Cita":"24-03-2026","Mes_Cita":"Marzo","Estado_Cita":"Agendado","Estado_Cita_Grupo":"Agendado","Especialidad":"Oftalmología","Profesional":"TM Tomás Ortiz Ponce","Primera_Cita":"NO","Prestaciones":""},{"RUT":"14544972-3","Nombre_Paciente":"Joice Joice Fritz","ID_Anuncio":"120246234989290029","Nombre_Anuncio":"Oculoplastia - Caída del párpado","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-03-15","Etapa_CRM":"Agendados","ID_Cita":"674089","Tipo_Servicio":"Consulta Médica","Tipo_Agenda":"Consultas","Fecha_Cita":"19-03-2026","Mes_Cita":"Marzo","Estado_Cita":"Cancelada","Estado_Cita_Grupo":"Cancelado","Especialidad":"Oftalmología","Profesional":"Christian Fontecilla Molina","Primera_Cita":"SI","Prestaciones":""},{"RUT":"14576289-8","Nombre_Paciente":"Romina Quinteros Adofacci","ID_Anuncio":"120245471522520029","Nombre_Anuncio":"Lasik - Proceso","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-03-15","Etapa_CRM":"Regendar / Cancelar","ID_Cita":"674056","Tipo_Servicio":"Consulta Médica","Tipo_Agenda":"Consultas","Fecha_Cita":"20-03-2026","Mes_Cita":"Marzo","Estado_Cita":"Cancelada","Estado_Cita_Grupo":"Cancelado","Especialidad":"Oftalmología","Profesional":"Xi Rao","Primera_Cita":"SI","Prestaciones":""},{"RUT":"23989658-8","Nombre_Paciente":"Sofia Carolina Flores Acevedo","ID_Anuncio":"120245683482050029","Nombre_Anuncio":"General Ceola","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-03-16","Etapa_CRM":"Agendados","ID_Cita":"674076","Tipo_Servicio":"Consulta Médica","Tipo_Agenda":"Consultas","Fecha_Cita":"19-03-2026","Mes_Cita":"Marzo","Estado_Cita":"Atendido","Estado_Cita_Grupo":"Atendido","Especialidad":"Oftalmología","Profesional":"Xi Rao","Primera_Cita":"SI","Prestaciones":"0101204_146480896 - Consulta Médica Oftalmología RAO XI, "},{"RUT":"23535755-0","Nombre_Paciente":"Gabriela Donoso Acevedo","ID_Anuncio":"120245683482050029","Nombre_Anuncio":"General Ceola","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-03-16","Etapa_CRM":"Agendados","ID_Cita":"674029","Tipo_Servicio":"Consulta Médica","Tipo_Agenda":"Consultas","Fecha_Cita":"17-03-2026","Mes_Cita":"Marzo","Estado_Cita":"Atendido","Estado_Cita_Grupo":"Atendido","Especialidad":"Oftalmología","Profesional":"Fernando Chamorro Quezada","Primera_Cita":"SI","Prestaciones":"0101204_15183793K - Consulta Médica Oftalmología CHAMORRO QUEZADA FERNANDO, "},{"RUT":"20727111-K","Nombre_Paciente":"Fernanda Paz Langer Lorenzo","ID_Anuncio":"120245683482050029","Nombre_Anuncio":"General Ceola","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-03-16","Etapa_CRM":"Agendados","ID_Cita":"674066","Tipo_Servicio":"Consulta Médica","Tipo_Agenda":"Consultas","Fecha_Cita":"19-03-2026","Mes_Cita":"Marzo","Estado_Cita":"Atendido","Estado_Cita_Grupo":"Atendido","Especialidad":"Oftalmología","Profesional":"Xi Rao","Primera_Cita":"SI","Prestaciones":"0101204_146480896 - Consulta Médica Oftalmología RAO XI, "},{"RUT":"9779456-1","Nombre_Paciente":"Elena Palacios Moreno","ID_Anuncio":"120245471522520029","Nombre_Anuncio":"Lasik - Proceso","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-03-18","Etapa_CRM":"Agendados","ID_Cita":"674387","Tipo_Servicio":"Consulta Médica","Tipo_Agenda":"Consultas","Fecha_Cita":"23-03-2026","Mes_Cita":"Marzo","Estado_Cita":"Atendido","Estado_Cita_Grupo":"Atendido","Especialidad":"Oftalmología","Profesional":"Pablo Riquelme","Primera_Cita":"SI","Prestaciones":"0101204_169393443 - Consulta Médica Oftalmología RIQUELME PABLO, "},{"RUT":"6362522-1","Nombre_Paciente":"María Consuelo Del Pilar Prosser Montecinos","ID_Anuncio":"120245683482050029","Nombre_Anuncio":"General Ceola","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-03-18","Etapa_CRM":"Agendados","ID_Cita":"674399","Tipo_Servicio":"Consulta Médica","Tipo_Agenda":"Consultas","Fecha_Cita":"19-03-2026","Mes_Cita":"Marzo","Estado_Cita":"Atendido","Estado_Cita_Grupo":"Atendido","Especialidad":"Oftalmología","Profesional":"Xi Rao","Primera_Cita":"SI","Prestaciones":"0101204_146480896 - Consulta Médica Oftalmología RAO XI, "},{"RUT":"13181684-7","Nombre_Paciente":"Araceli López  Nuñez","ID_Anuncio":"120245683482050029","Nombre_Anuncio":"General Ceola","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-03-19","Etapa_CRM":"Regendar / Cancelar","ID_Cita":"674506","Tipo_Servicio":"Consulta Médica","Tipo_Agenda":"Consultas","Fecha_Cita":"23-03-2026","Mes_Cita":"Marzo","Estado_Cita":"Falta sin aviso","Estado_Cita_Grupo":"Otro","Especialidad":"Oftalmología","Profesional":"Daniel Braun","Primera_Cita":"SI","Prestaciones":""},{"RUT":"7496712-4","Nombre_Paciente":"VICTOR ARTURO BERRIOS ESCALONA","ID_Anuncio":"120245683482050029","Nombre_Anuncio":"General Ceola","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-03-20","Etapa_CRM":"Regendar / Cancelar","ID_Cita":"674966","Tipo_Servicio":"Consulta Médica","Tipo_Agenda":"Consultas","Fecha_Cita":"08-04-2026","Mes_Cita":"Abril","Estado_Cita":"Cancelada","Estado_Cita_Grupo":"Cancelado","Especialidad":"Oftalmología","Profesional":"Andrés Aqueveque Bull","Primera_Cita":"NO","Prestaciones":""},{"RUT":"7496712-4","Nombre_Paciente":"VICTOR ARTURO BERRIOS ESCALONA","ID_Anuncio":"120245683482050029","Nombre_Anuncio":"General Ceola","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-03-20","Etapa_CRM":"Regendar / Cancelar","ID_Cita":"675068","Tipo_Servicio":"Consulta Médica","Tipo_Agenda":"Consultas","Fecha_Cita":"08-04-2026","Mes_Cita":"Abril","Estado_Cita":"Atendido","Estado_Cita_Grupo":"Atendido","Especialidad":"Oftalmología","Profesional":"Andrés Aqueveque Bull","Primera_Cita":"NO","Prestaciones":"0101204_16163087K - Consulta Médica Oftalmología AQUEVEQUE BULL ANDRES, "},{"RUT":"7496712-4","Nombre_Paciente":"VICTOR ARTURO BERRIOS ESCALONA","ID_Anuncio":"120245683482050029","Nombre_Anuncio":"General Ceola","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-03-20","Etapa_CRM":"Regendar / Cancelar","ID_Cita":"674538","Tipo_Servicio":"Consulta Médica","Tipo_Agenda":"Consultas","Fecha_Cita":"08-04-2026","Mes_Cita":"Abril","Estado_Cita":"Cancelada","Estado_Cita_Grupo":"Cancelado","Especialidad":"Oftalmología","Profesional":"Andrés Aqueveque Bull","Primera_Cita":"SI","Prestaciones":""},{"RUT":"13994946-3","Nombre_Paciente":"maría jose pereira aguirre","ID_Anuncio":"120245683482050029","Nombre_Anuncio":"General Ceola","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-03-20","Etapa_CRM":"Regendar / Cancelar","ID_Cita":"674356","Tipo_Servicio":"Examen","Tipo_Agenda":"Exámenes","Fecha_Cita":"25-03-2026","Mes_Cita":"Marzo","Estado_Cita":"Agendado","Estado_Cita_Grupo":"Agendado","Especialidad":"Oftalmología","Profesional":"TM Tomás Ortiz Ponce","Primera_Cita":"NO","Prestaciones":""},{"RUT":"8559211-4","Nombre_Paciente":"Verónica Bravo  Olivares","ID_Anuncio":"120246234989290029","Nombre_Anuncio":"Oculoplastia - Caída del párpado","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-03-20","Etapa_CRM":"Regendar / Cancelar","ID_Cita":"674649","Tipo_Servicio":"Consulta Médica","Tipo_Agenda":"Consultas","Fecha_Cita":"24-03-2026","Mes_Cita":"Marzo","Estado_Cita":"Cancelada","Estado_Cita_Grupo":"Cancelado","Especialidad":"Oftalmología","Profesional":"Christian Fontecilla Molina","Primera_Cita":"SI","Prestaciones":""},{"RUT":"8300912-8","Nombre_Paciente":"Patricio Seaton  Ponce","ID_Anuncio":"120245683482050029","Nombre_Anuncio":"General Ceola","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-03-20","Etapa_CRM":"Agendados","ID_Cita":"674701","Tipo_Servicio":"Consulta Médica","Tipo_Agenda":"Consultas","Fecha_Cita":"25-03-2026","Mes_Cita":"Marzo","Estado_Cita":"Falta sin aviso","Estado_Cita_Grupo":"Otro","Especialidad":"Oftalmología","Profesional":"Daniel Braun","Primera_Cita":"NO","Prestaciones":""},{"RUT":"8300912-8","Nombre_Paciente":"Patricio Seaton  Ponce","ID_Anuncio":"120245683482050029","Nombre_Anuncio":"General Ceola","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-03-20","Etapa_CRM":"Agendados","ID_Cita":"674620","Tipo_Servicio":"Consulta Médica","Tipo_Agenda":"Consultas","Fecha_Cita":"26-03-2026","Mes_Cita":"Marzo","Estado_Cita":"Cancelada","Estado_Cita_Grupo":"Cancelado","Especialidad":"Oftalmología","Profesional":"Daniel Navarrete Gómez","Primera_Cita":"SI","Prestaciones":""},{"RUT":"8300912-8","Nombre_Paciente":"Patricio Seaton  Ponce","ID_Anuncio":"120245683482050029","Nombre_Anuncio":"General Ceola","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-03-20","Etapa_CRM":"Agendados","ID_Cita":"675744","Tipo_Servicio":"Consulta Médica","Tipo_Agenda":"Consultas","Fecha_Cita":"09-04-2026","Mes_Cita":"Abril","Estado_Cita":"Falta sin aviso","Estado_Cita_Grupo":"Otro","Especialidad":"Oftalmología","Profesional":"Daniel Braun","Primera_Cita":"NO","Prestaciones":""},{"RUT":"4120004-9","Nombre_Paciente":"Mercedes Bulnes Gómez","ID_Anuncio":"120245471522520029","Nombre_Anuncio":"Lasik - Proceso","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-03-21","Etapa_CRM":"Agendados","ID_Cita":"674813","Tipo_Servicio":"Consulta Médica","Tipo_Agenda":"Consultas","Fecha_Cita":"26-03-2026","Mes_Cita":"Marzo","Estado_Cita":"Atendido","Estado_Cita_Grupo":"Atendido","Especialidad":"Oftalmología","Profesional":"Christian Fontecilla Molina","Primera_Cita":"SI","Prestaciones":"0101204_100108046 - Consulta Médica Oftalmología FONTECILLA MOLINA CHRISTIAN, "},{"RUT":"22288518-3","Nombre_Paciente":"Sebastián Palma Gutiérrez","ID_Anuncio":"120245683482050029","Nombre_Anuncio":"General Ceola","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-03-22","Etapa_CRM":"Agendados","ID_Cita":"674683","Tipo_Servicio":"Consulta Médica","Tipo_Agenda":"Consultas","Fecha_Cita":"26-03-2026","Mes_Cita":"Marzo","Estado_Cita":"Cancelada","Estado_Cita_Grupo":"Cancelado","Especialidad":"Oftalmología","Profesional":"Xi Rao","Primera_Cita":"SI","Prestaciones":""},{"RUT":"7546533-5","Nombre_Paciente":"Roxana Vivian Castillo  Caste","ID_Anuncio":"120245683482050029","Nombre_Anuncio":"General Ceola","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-03-22","Etapa_CRM":"Agendados","ID_Cita":"674641","Tipo_Servicio":"Consulta Médica","Tipo_Agenda":"Consultas","Fecha_Cita":"24-03-2026","Mes_Cita":"Marzo","Estado_Cita":"Atendido","Estado_Cita_Grupo":"Atendido","Especialidad":"Oftalmología","Profesional":"Christian Fontecilla Molina","Primera_Cita":"SI","Prestaciones":"0101204_100108046 - Consulta Médica Oftalmología FONTECILLA MOLINA CHRISTIAN, "},{"RUT":"6685422-1","Nombre_Paciente":"Fresia Soledad Narvaez Jofre","ID_Anuncio":"120245683482050029","Nombre_Anuncio":"General Ceola","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-03-23","Etapa_CRM":"Regendar / Cancelar","ID_Cita":"674805","Tipo_Servicio":"Consulta Médica","Tipo_Agenda":"Consultas","Fecha_Cita":"30-03-2026","Mes_Cita":"Marzo","Estado_Cita":"Cancelada","Estado_Cita_Grupo":"Cancelado","Especialidad":"Oftalmología","Profesional":"Pablo Riquelme","Primera_Cita":"SI","Prestaciones":""},{"RUT":"15080417-5","Nombre_Paciente":"Ana Gabriela Rebeco Basaez","ID_Anuncio":"120246234989290029","Nombre_Anuncio":"Oculoplastia - Caída del párpado","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-03-23","Etapa_CRM":"Regendar / Cancelar","ID_Cita":"674744","Tipo_Servicio":"Consulta Médica","Tipo_Agenda":"Consultas","Fecha_Cita":"26-03-2026","Mes_Cita":"Marzo","Estado_Cita":"Atendido","Estado_Cita_Grupo":"Atendido","Especialidad":"Oftalmología","Profesional":"Christian Fontecilla Molina","Primera_Cita":"SI","Prestaciones":"0101204_100108046 - Consulta Médica Oftalmología FONTECILLA MOLINA CHRISTIAN, "},{"RUT":"15080417-5","Nombre_Paciente":"Ana Gabriela Rebeco Basaez","ID_Anuncio":"120246234989290029","Nombre_Anuncio":"Oculoplastia - Caída del párpado","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-03-23","Etapa_CRM":"Regendar / Cancelar","ID_Cita":"675142","Tipo_Servicio":"Examen","Tipo_Agenda":"Exámenes","Fecha_Cita":"01-04-2026","Mes_Cita":"Abril","Estado_Cita":"Agendado","Estado_Cita_Grupo":"Agendado","Especialidad":"Oftalmología","Profesional":"TM Tomás Ortiz Ponce","Primera_Cita":"NO","Prestaciones":""},{"RUT":"15080417-5","Nombre_Paciente":"Ana Gabriela Rebeco Basaez","ID_Anuncio":"120246234989290029","Nombre_Anuncio":"Oculoplastia - Caída del párpado","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-03-23","Etapa_CRM":"Regendar / Cancelar","ID_Cita":"675149","Tipo_Servicio":"Examen","Tipo_Agenda":"Exámenes","Fecha_Cita":"01-04-2026","Mes_Cita":"Abril","Estado_Cita":"Agendado","Estado_Cita_Grupo":"Agendado","Especialidad":"Oftalmología","Profesional":"Catalina Carrizo Rodriguez","Primera_Cita":"NO","Prestaciones":""},{"RUT":"15080417-5","Nombre_Paciente":"Ana Gabriela Rebeco Basaez","ID_Anuncio":"120246234989290029","Nombre_Anuncio":"Oculoplastia - Caída del párpado","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-03-23","Etapa_CRM":"Regendar / Cancelar","ID_Cita":"675146","Tipo_Servicio":"Examen","Tipo_Agenda":"Exámenes","Fecha_Cita":"01-04-2026","Mes_Cita":"Abril","Estado_Cita":"Agendado","Estado_Cita_Grupo":"Agendado","Especialidad":"Oftalmología","Profesional":"TM Tomás Ortiz Ponce","Primera_Cita":"NO","Prestaciones":""},{"RUT":"11400181-3","Nombre_Paciente":"Verónica Espinoza González","ID_Anuncio":"120245683482050029","Nombre_Anuncio":"General Ceola","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-03-23","Etapa_CRM":"Regendar / Cancelar","ID_Cita":"674644","Tipo_Servicio":"Consulta Médica","Tipo_Agenda":"Consultas","Fecha_Cita":"24-03-2026","Mes_Cita":"Marzo","Estado_Cita":"Cancelada","Estado_Cita_Grupo":"Cancelado","Especialidad":"Oftalmología","Profesional":"Daniel Braun","Primera_Cita":"SI","Prestaciones":""},{"RUT":"19012914-4","Nombre_Paciente":"Ian Franco Vera Gonzalez","ID_Anuncio":"120245471522520029","Nombre_Anuncio":"Lasik - Proceso","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-03-23","Etapa_CRM":"Regendar / Cancelar","ID_Cita":"674743","Tipo_Servicio":"Consulta Médica","Tipo_Agenda":"Consultas","Fecha_Cita":"26-03-2026","Mes_Cita":"Marzo","Estado_Cita":"Falta sin aviso","Estado_Cita_Grupo":"Otro","Especialidad":"Oftalmología","Profesional":"Daniel Navarrete Gómez","Primera_Cita":"SI","Prestaciones":""},{"RUT":"10762390-6","Nombre_Paciente":"Claudia Paz Sasso Nuñez","ID_Anuncio":"120245683482050029","Nombre_Anuncio":"General Ceola","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-03-23","Etapa_CRM":"Regendar / Cancelar","ID_Cita":"674684","Tipo_Servicio":"Consulta Médica","Tipo_Agenda":"Consultas","Fecha_Cita":"26-03-2026","Mes_Cita":"Marzo","Estado_Cita":"Falta sin aviso","Estado_Cita_Grupo":"Otro","Especialidad":"Oftalmología","Profesional":"Daniel Navarrete Gómez","Primera_Cita":"SI","Prestaciones":""},{"RUT":"18999149-5","Nombre_Paciente":"Gabriel Ignacio Vigorena Quiroz","ID_Anuncio":"120245683482050029","Nombre_Anuncio":"General Ceola","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-03-23","Etapa_CRM":"Regendar / Cancelar","ID_Cita":"674790","Tipo_Servicio":"Consulta Médica","Tipo_Agenda":"Consultas","Fecha_Cita":"25-03-2026","Mes_Cita":"Marzo","Estado_Cita":"Atendido","Estado_Cita_Grupo":"Atendido","Especialidad":"Oftalmología","Profesional":"Christian Fontecilla Molina","Primera_Cita":"SI","Prestaciones":"0101204_100108046 - Consulta Médica Oftalmología FONTECILLA MOLINA CHRISTIAN, "},{"RUT":"8328939-2","Nombre_Paciente":"Karen Constance Román Zorzi","ID_Anuncio":"120246234989290029","Nombre_Anuncio":"Oculoplastia - Caída del párpado","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-03-23","Etapa_CRM":"Perdidos","ID_Cita":"675286","Tipo_Servicio":"Consulta Médica","Tipo_Agenda":"Consultas","Fecha_Cita":"02-04-2026","Mes_Cita":"Abril","Estado_Cita":"Cancelada","Estado_Cita_Grupo":"Cancelado","Especialidad":"Oftalmología","Profesional":"Christian Fontecilla Molina","Primera_Cita":"SI","Prestaciones":""},{"RUT":"12448886-9","Nombre_Paciente":"Myriam Espinoza Cordero","ID_Anuncio":"120246234989290029","Nombre_Anuncio":"Oculoplastia - Caída del párpado","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-03-23","Etapa_CRM":"Regendar / Cancelar","ID_Cita":"674810","Tipo_Servicio":"Consulta Médica","Tipo_Agenda":"Consultas","Fecha_Cita":"25-03-2026","Mes_Cita":"Marzo","Estado_Cita":"Atendido","Estado_Cita_Grupo":"Atendido","Especialidad":"Oftalmología","Profesional":"Christian Fontecilla Molina","Primera_Cita":"SI","Prestaciones":"0101204_100108046 - Consulta Médica Oftalmología FONTECILLA MOLINA CHRISTIAN, "},{"RUT":"14265850-K","Nombre_Paciente":"Gustavo German Olivares Rivas","ID_Anuncio":"120245683482050029","Nombre_Anuncio":"General Ceola","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-03-23","Etapa_CRM":"Regendar / Cancelar","ID_Cita":"675356","Tipo_Servicio":"Pabellón (Cirugía)","Tipo_Agenda":"Pabellón","Fecha_Cita":"02-04-2026","Mes_Cita":"Abril","Estado_Cita":"Operado","Estado_Cita_Grupo":"Otro","Especialidad":"","Profesional":"Dario Vásquez Zuloaga","Primera_Cita":"SI","Prestaciones":""},{"RUT":"10699627-K","Nombre_Paciente":"INGRID PONCE MENARES","ID_Anuncio":"120245683482050029","Nombre_Anuncio":"General Ceola","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-03-24","Etapa_CRM":"Agendados","ID_Cita":"674821","Tipo_Servicio":"Consulta Médica","Tipo_Agenda":"Consultas","Fecha_Cita":"25-03-2026","Mes_Cita":"Marzo","Estado_Cita":"Atendido","Estado_Cita_Grupo":"Atendido","Especialidad":"Oftalmología","Profesional":"Daniel Braun","Primera_Cita":"SI","Prestaciones":"0101204_92110168 - Consulta Médica Oftalmología BRAUN SCHURMAN DANIEL, "},{"RUT":"9849103-1","Nombre_Paciente":"Josefina Zunilda Letelier Silva","ID_Anuncio":"120245683482050029","Nombre_Anuncio":"General Ceola","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-03-24","Etapa_CRM":"Regendar / Cancelar","ID_Cita":"674827","Tipo_Servicio":"Consulta Médica","Tipo_Agenda":"Consultas","Fecha_Cita":"26-03-2026","Mes_Cita":"Marzo","Estado_Cita":"Falta sin aviso","Estado_Cita_Grupo":"Otro","Especialidad":"Oftalmología","Profesional":"Daniel Braun","Primera_Cita":"SI","Prestaciones":""},{"RUT":"8731950-4","Nombre_Paciente":"Nelson Cruz","ID_Anuncio":"120245683482050029","Nombre_Anuncio":"General Ceola","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-03-24","Etapa_CRM":"Regendar / Cancelar","ID_Cita":"674915","Tipo_Servicio":"Consulta Médica","Tipo_Agenda":"Consultas","Fecha_Cita":"25-03-2026","Mes_Cita":"Marzo","Estado_Cita":"Cancelada","Estado_Cita_Grupo":"Cancelado","Especialidad":"Oftalmología","Profesional":"Christian Fontecilla Molina","Primera_Cita":"SI","Prestaciones":""},{"RUT":"19940435-0","Nombre_Paciente":"Catalina Silva","ID_Anuncio":"120246237288100029","Nombre_Anuncio":"Lentes vs cirugía láser","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-03-24","Etapa_CRM":"Regendar / Cancelar","ID_Cita":"675637","Tipo_Servicio":"Consulta Médica","Tipo_Agenda":"Consultas","Fecha_Cita":"02-04-2026","Mes_Cita":"Abril","Estado_Cita":"Atendido","Estado_Cita_Grupo":"Atendido","Especialidad":"Oftalmología","Profesional":"Daniel Navarrete Gómez","Primera_Cita":"SI","Prestaciones":"0101204_107671625 - Consulta Médica Oftalmología NAVARRETE GOMEZ DANIEL, "},{"RUT":"19940435-0","Nombre_Paciente":"CATALINA BELÉN SILVA SAGAL","ID_Anuncio":"120246237288100029","Nombre_Anuncio":"Lentes vs cirugía láser","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-03-24","Etapa_CRM":"Regendar / Cancelar","ID_Cita":"675929","Tipo_Servicio":"Examen","Tipo_Agenda":"Exámenes","Fecha_Cita":"07-04-2026","Mes_Cita":"Abril","Estado_Cita":"Recepcionado","Estado_Cita_Grupo":"Recepcionado","Especialidad":"Oftalmología","Profesional":"TM Tomás Ortiz Ponce","Primera_Cita":"NO","Prestaciones":"1201003 - Test de Schirmer I, "},{"RUT":"19940435-0","Nombre_Paciente":"CATALINA BELÉN SILVA SAGAL","ID_Anuncio":"120246237288100029","Nombre_Anuncio":"Lentes vs cirugía láser","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-03-24","Etapa_CRM":"Regendar / Cancelar","ID_Cita":"676450","Tipo_Servicio":"Consulta Médica","Tipo_Agenda":"Consultas","Fecha_Cita":"09-04-2026","Mes_Cita":"Abril","Estado_Cita":"Atendido","Estado_Cita_Grupo":"Atendido","Especialidad":"Oftalmología","Profesional":"Daniel Navarrete Gómez","Primera_Cita":"NO","Prestaciones":"CON0101204_2 - Control sin costo, "},{"RUT":"7170685-0","Nombre_Paciente":"Magaly Ambiado González","ID_Anuncio":"120245683482050029","Nombre_Anuncio":"General Ceola","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-03-25","Etapa_CRM":"Regendar / Cancelar","ID_Cita":"674921","Tipo_Servicio":"Consulta Médica","Tipo_Agenda":"Consultas","Fecha_Cita":"09-04-2026","Mes_Cita":"Abril","Estado_Cita":"Atendido","Estado_Cita_Grupo":"Atendido","Especialidad":"Oftalmología","Profesional":"Xi Rao","Primera_Cita":"SI","Prestaciones":"0101204_146480896 - Consulta Médica Oftalmología RAO XI, "},{"RUT":"7059363-7","Nombre_Paciente":"Celinda del Carmen Santibañez Suarez","ID_Anuncio":"120245471522520029","Nombre_Anuncio":"Lasik - Proceso","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-03-25","Etapa_CRM":"Agendados","ID_Cita":"671790","Tipo_Servicio":"Consulta Médica","Tipo_Agenda":"Consultas","Fecha_Cita":"20-02-2026","Mes_Cita":"Febrero","Estado_Cita":"Agendado","Estado_Cita_Grupo":"Agendado","Especialidad":"Oftalmología","Profesional":"Jorge Schwember Fernández","Primera_Cita":"SI","Prestaciones":""},{"RUT":"7059363-7","Nombre_Paciente":"Celinda del Carmen Santibañez Suarez","ID_Anuncio":"120245471522520029","Nombre_Anuncio":"Lasik - Proceso","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-03-25","Etapa_CRM":"Agendados","ID_Cita":"675066","Tipo_Servicio":"Consulta Médica","Tipo_Agenda":"Consultas","Fecha_Cita":"02-04-2026","Mes_Cita":"Abril","Estado_Cita":"Cancelada","Estado_Cita_Grupo":"Cancelado","Especialidad":"Oftalmología","Profesional":"Daniel Navarrete Gómez","Primera_Cita":"NO","Prestaciones":""},{"RUT":"7059363-7","Nombre_Paciente":"Celinda del Carmen Santibañez Suarez","ID_Anuncio":"120245471522520029","Nombre_Anuncio":"Lasik - Proceso","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-03-25","Etapa_CRM":"Agendados","ID_Cita":"675838","Tipo_Servicio":"Consulta Médica","Tipo_Agenda":"Consultas","Fecha_Cita":"09-04-2026","Mes_Cita":"Abril","Estado_Cita":"Atendido","Estado_Cita_Grupo":"Atendido","Especialidad":"Oftalmología","Profesional":"Daniel Navarrete Gómez","Primera_Cita":"NO","Prestaciones":"0101204_107671625 - Consulta Médica Oftalmología NAVARRETE GOMEZ DANIEL, "},{"RUT":"6421506-K","Nombre_Paciente":"Bernardo Febre Torres","ID_Anuncio":"120245683482050029","Nombre_Anuncio":"General Ceola","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-03-25","Etapa_CRM":"Agendados","ID_Cita":"675077","Tipo_Servicio":"Consulta Médica","Tipo_Agenda":"Consultas","Fecha_Cita":"26-03-2026","Mes_Cita":"Marzo","Estado_Cita":"Falta sin aviso","Estado_Cita_Grupo":"Otro","Especialidad":"Oftalmología","Profesional":"Daniel Navarrete Gómez","Primera_Cita":"SI","Prestaciones":""},{"RUT":"6421506-K","Nombre_Paciente":"Bernardo Febre Torres","ID_Anuncio":"120245683482050029","Nombre_Anuncio":"General Ceola","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-03-25","Etapa_CRM":"Agendados","ID_Cita":"675412","Tipo_Servicio":"Consulta Médica","Tipo_Agenda":"Consultas","Fecha_Cita":"30-03-2026","Mes_Cita":"Marzo","Estado_Cita":"Atendido","Estado_Cita_Grupo":"Atendido","Especialidad":"Oftalmología","Profesional":"Daniel Braun","Primera_Cita":"NO","Prestaciones":"0101204_92110168 - Consulta Médica Oftalmología BRAUN SCHURMAN DANIEL, "},{"RUT":"13194923-5","Nombre_Paciente":"Evelyn Andrea Briones Navarro","ID_Anuncio":"120245471522520029","Nombre_Anuncio":"Lasik - Proceso","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-03-25","Etapa_CRM":"Perdidos","ID_Cita":"675081","Tipo_Servicio":"Consulta Médica","Tipo_Agenda":"Consultas","Fecha_Cita":"10-04-2026","Mes_Cita":"Abril","Estado_Cita":"Cancelada","Estado_Cita_Grupo":"Cancelado","Especialidad":"Oftalmología","Profesional":"Xi Rao","Primera_Cita":"SI","Prestaciones":""},{"RUT":"6776840-K","Nombre_Paciente":"Maria Angélica Lemus Salcedo","ID_Anuncio":"120245683482050029","Nombre_Anuncio":"General Ceola","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-03-26","Etapa_CRM":"Agendados","ID_Cita":"675215","Tipo_Servicio":"Consulta Médica","Tipo_Agenda":"Consultas","Fecha_Cita":"30-03-2026","Mes_Cita":"Marzo","Estado_Cita":"Atendido","Estado_Cita_Grupo":"Atendido","Especialidad":"Oftalmología","Profesional":"Pablo Riquelme","Primera_Cita":"SI","Prestaciones":"0101204_169393443 - Consulta Médica Oftalmología RIQUELME PABLO, "},{"RUT":"6776840-K","Nombre_Paciente":"Maria Angélica Lemus Salcedo","ID_Anuncio":"120245683482050029","Nombre_Anuncio":"General Ceola","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-03-26","Etapa_CRM":"Agendados","ID_Cita":"675457","Tipo_Servicio":"Examen","Tipo_Agenda":"Exámenes","Fecha_Cita":"31-03-2026","Mes_Cita":"Marzo","Estado_Cita":"Recepcionado","Estado_Cita_Grupo":"Recepcionado","Especialidad":"Oftalmología","Profesional":"TM Tomás Ortiz Ponce","Primera_Cita":"NO","Prestaciones":"1201020 - Ecobiometría Optica IOL Master + Cálculo LIO, "},{"RUT":"6776840-K","Nombre_Paciente":"Maria Angélica Lemus Salcedo","ID_Anuncio":"120245683482050029","Nombre_Anuncio":"General Ceola","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-03-26","Etapa_CRM":"Agendados","ID_Cita":"675540","Tipo_Servicio":"Consulta Médica","Tipo_Agenda":"Consultas","Fecha_Cita":"09-04-2026","Mes_Cita":"Abril","Estado_Cita":"Atendido","Estado_Cita_Grupo":"Atendido","Especialidad":"Oftalmología","Profesional":"Pablo Riquelme","Primera_Cita":"NO","Prestaciones":"0101204_169393443 - Consulta Médica Oftalmología RIQUELME PABLO, 0101204_169393443 - Consulta Médica Oftalmología RIQUEL"},{"RUT":"10902448-1","Nombre_Paciente":"Maria Isabel Gonzalez","ID_Anuncio":"120246234989290029","Nombre_Anuncio":"Oculoplastia - Caída del párpado","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-03-28","Etapa_CRM":"Agendados","ID_Cita":"675390","Tipo_Servicio":"Consulta Médica","Tipo_Agenda":"Consultas","Fecha_Cita":"02-04-2026","Mes_Cita":"Abril","Estado_Cita":"Cancelada","Estado_Cita_Grupo":"Cancelado","Especialidad":"Oftalmología","Profesional":"Christian Fontecilla Molina","Primera_Cita":"NO","Prestaciones":""},{"RUT":"10902448-1","Nombre_Paciente":"Maria Isabel Gonzalez","ID_Anuncio":"120246234989290029","Nombre_Anuncio":"Oculoplastia - Caída del párpado","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-03-28","Etapa_CRM":"Agendados","ID_Cita":"675389","Tipo_Servicio":"Consulta Médica","Tipo_Agenda":"Consultas","Fecha_Cita":"02-04-2026","Mes_Cita":"Abril","Estado_Cita":"Cancelada","Estado_Cita_Grupo":"Cancelado","Especialidad":"Oftalmología","Profesional":"Christian Fontecilla Molina","Primera_Cita":"SI","Prestaciones":""},{"RUT":"10902448-1","Nombre_Paciente":"Maria Isabel Gonzalez","ID_Anuncio":"120246234989290029","Nombre_Anuncio":"Oculoplastia - Caída del párpado","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-03-28","Etapa_CRM":"Agendados","ID_Cita":"675502","Tipo_Servicio":"Consulta Médica","Tipo_Agenda":"Consultas","Fecha_Cita":"09-04-2026","Mes_Cita":"Abril","Estado_Cita":"Confirmado","Estado_Cita_Grupo":"Otro","Especialidad":"Oftalmología","Profesional":"Christian Fontecilla Molina","Primera_Cita":"NO","Prestaciones":""},{"RUT":"8489255-6","Nombre_Paciente":"Elmita Roxana Aravena Puebla","ID_Anuncio":"120246234989290029","Nombre_Anuncio":"Oculoplastia - Caída del párpado","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-03-29","Etapa_CRM":"Agendados","ID_Cita":"675369","Tipo_Servicio":"Consulta Médica","Tipo_Agenda":"Consultas","Fecha_Cita":"07-04-2026","Mes_Cita":"Abril","Estado_Cita":"Atendido","Estado_Cita_Grupo":"Atendido","Especialidad":"Oftalmología","Profesional":"Christian Fontecilla Molina","Primera_Cita":"SI","Prestaciones":"0101204_100108046 - Consulta Médica Oftalmología FONTECILLA MOLINA CHRISTIAN, "},{"RUT":"8489255-6","Nombre_Paciente":"Elmita Roxana Aravena Puebla","ID_Anuncio":"120246234989290029","Nombre_Anuncio":"Oculoplastia - Caída del párpado","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-03-29","Etapa_CRM":"Agendados","ID_Cita":"676292","Tipo_Servicio":"Examen","Tipo_Agenda":"Exámenes","Fecha_Cita":"09-04-2026","Mes_Cita":"Abril","Estado_Cita":"Recepcionado","Estado_Cita_Grupo":"Recepcionado","Especialidad":"Oftalmología","Profesional":"TM Tomás Ortiz Ponce","Primera_Cita":"NO","Prestaciones":"1201044 - OCT Glaucoma, "},{"RUT":"5465231-3","Nombre_Paciente":"Luis Alfredo Leal Cantillano","ID_Anuncio":"120245683482050029","Nombre_Anuncio":"General Ceola","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-03-29","Etapa_CRM":"Agendados","ID_Cita":"675355","Tipo_Servicio":"Consulta Médica","Tipo_Agenda":"Consultas","Fecha_Cita":"31-03-2026","Mes_Cita":"Marzo","Estado_Cita":"Atendido","Estado_Cita_Grupo":"Atendido","Especialidad":"Oftalmología","Profesional":"Fernando Chamorro Quezada","Primera_Cita":"SI","Prestaciones":"0101204_15183793K - Consulta Médica Oftalmología CHAMORRO QUEZADA FERNANDO, "},{"RUT":"4873169-4","Nombre_Paciente":"María Teresa Viacava Bruzxone","ID_Anuncio":"120245683482050029","Nombre_Anuncio":"General Ceola","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-03-30","Etapa_CRM":"Perdidos","ID_Cita":"675703","Tipo_Servicio":"Consulta Médica","Tipo_Agenda":"Consultas","Fecha_Cita":"02-04-2026","Mes_Cita":"Abril","Estado_Cita":"Atendido","Estado_Cita_Grupo":"Atendido","Especialidad":"Oftalmología","Profesional":"Daniel Navarrete Gómez","Primera_Cita":"NO","Prestaciones":"0101204_107671625 - Consulta Médica Oftalmología NAVARRETE GOMEZ DANIEL, "},{"RUT":"4873169-4","Nombre_Paciente":"María Teresa Viacava Bruzxone","ID_Anuncio":"120245683482050029","Nombre_Anuncio":"General Ceola","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-03-30","Etapa_CRM":"Perdidos","ID_Cita":"675694","Tipo_Servicio":"Consulta Médica","Tipo_Agenda":"Consultas","Fecha_Cita":"06-04-2026","Mes_Cita":"Abril","Estado_Cita":"Cancelada","Estado_Cita_Grupo":"Cancelado","Especialidad":"Oftalmología","Profesional":"Jorge Schwember Fernández","Primera_Cita":"SI","Prestaciones":""},{"RUT":"16141550-2","Nombre_Paciente":"MABEL RUBIO PEREZ","ID_Anuncio":"120245683482050029","Nombre_Anuncio":"General Ceola","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-03-30","Etapa_CRM":"Perdidos","ID_Cita":"673623","Tipo_Servicio":"Consulta Médica","Tipo_Agenda":"Consultas","Fecha_Cita":"12-03-2026","Mes_Cita":"Marzo","Estado_Cita":"Atendido","Estado_Cita_Grupo":"Atendido","Especialidad":"Oftalmología","Profesional":"Daniel Navarrete Gómez","Primera_Cita":"SI","Prestaciones":"0101204_107671625 - Consulta Médica Oftalmología NAVARRETE GOMEZ DANIEL, 0101204_107671625 - Consulta Médica Oftalmologí"},{"RUT":"16141550-2","Nombre_Paciente":"MABEL RUBIO PEREZ","ID_Anuncio":"120245683482050029","Nombre_Anuncio":"General Ceola","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-03-30","Etapa_CRM":"Perdidos","ID_Cita":"674474","Tipo_Servicio":"Consulta Médica","Tipo_Agenda":"Consultas","Fecha_Cita":"19-03-2026","Mes_Cita":"Marzo","Estado_Cita":"Atendido","Estado_Cita_Grupo":"Atendido","Especialidad":"Oftalmología","Profesional":"Daniel Navarrete Gómez","Primera_Cita":"NO","Prestaciones":"CON0101204_2 - Control sin costo, "},{"RUT":"16141550-2","Nombre_Paciente":"MABEL RUBIO PEREZ","ID_Anuncio":"120245683482050029","Nombre_Anuncio":"General Ceola","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-03-30","Etapa_CRM":"Perdidos","ID_Cita":"674533","Tipo_Servicio":"Consulta Médica","Tipo_Agenda":"Consultas","Fecha_Cita":"23-03-2026","Mes_Cita":"Marzo","Estado_Cita":"Atendido","Estado_Cita_Grupo":"Atendido","Especialidad":"Oftalmología","Profesional":"Jorge Schwember Fernández","Primera_Cita":"NO","Prestaciones":"0101204_50966607 - Consulta Médica Oftalmología SCHWEMBER FERNANDEZ JORGE, "},{"RUT":"16141550-2","Nombre_Paciente":"MABEL RUBIO PEREZ","ID_Anuncio":"120245683482050029","Nombre_Anuncio":"General Ceola","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-03-30","Etapa_CRM":"Perdidos","ID_Cita":"674661","Tipo_Servicio":"Consulta Médica","Tipo_Agenda":"Consultas","Fecha_Cita":"06-04-2026","Mes_Cita":"Abril","Estado_Cita":"Atendido","Estado_Cita_Grupo":"Atendido","Especialidad":"Oftalmología","Profesional":"Jorge Schwember Fernández","Primera_Cita":"NO","Prestaciones":"CON0101204_2 - Control sin costo, "},{"RUT":"16141550-2","Nombre_Paciente":"MABEL RUBIO PEREZ","ID_Anuncio":"120245683482050029","Nombre_Anuncio":"General Ceola","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-03-30","Etapa_CRM":"Perdidos","ID_Cita":"674900","Tipo_Servicio":"Consulta Médica","Tipo_Agenda":"Consultas","Fecha_Cita":"06-04-2026","Mes_Cita":"Abril","Estado_Cita":"Cancelada","Estado_Cita_Grupo":"Cancelado","Especialidad":"Oftalmología","Profesional":"Luis Ernesto Venegas González","Primera_Cita":"NO","Prestaciones":""},{"RUT":"10653014-9","Nombre_Paciente":"Loreto Pizarro Ponce","ID_Anuncio":"120246234989290029","Nombre_Anuncio":"Oculoplastia - Caída del párpado","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-03-30","Etapa_CRM":"Agendados","ID_Cita":"675486","Tipo_Servicio":"Consulta Médica","Tipo_Agenda":"Consultas","Fecha_Cita":"07-04-2026","Mes_Cita":"Abril","Estado_Cita":"Atendido","Estado_Cita_Grupo":"Atendido","Especialidad":"Oftalmología","Profesional":"Christian Fontecilla Molina","Primera_Cita":"SI","Prestaciones":"0101204_100108046 - Consulta Médica Oftalmología FONTECILLA MOLINA CHRISTIAN, "},{"RUT":"3757531-3","Nombre_Paciente":"ELIZABETH SILVIA","ID_Anuncio":"120245683482050029","Nombre_Anuncio":"General Ceola","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-03-31","Etapa_CRM":"Agendados","ID_Cita":"675534","Tipo_Servicio":"Consulta Médica","Tipo_Agenda":"Consultas","Fecha_Cita":"01-04-2026","Mes_Cita":"Abril","Estado_Cita":"Cancelada","Estado_Cita_Grupo":"Cancelado","Especialidad":"Oftalmología","Profesional":"Andrés Aqueveque Bull","Primera_Cita":"SI","Prestaciones":""},{"RUT":"7715624-0","Nombre_Paciente":"Claudina Solis ibañez","ID_Anuncio":"120246237152910029","Nombre_Anuncio":"Oculoplastia - Lagrimeo Ocular","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-04-01","Etapa_CRM":"Agendados","ID_Cita":"675638","Tipo_Servicio":"Consulta Médica","Tipo_Agenda":"Consultas","Fecha_Cita":"07-04-2026","Mes_Cita":"Abril","Estado_Cita":"Confirmado","Estado_Cita_Grupo":"Otro","Especialidad":"Oftalmología","Profesional":"Bozidar Ivankovic Larraín","Primera_Cita":"SI","Prestaciones":""},{"RUT":"28160013-3","Nombre_Paciente":"Santos lobato Ruiz","ID_Anuncio":"120245471522520029","Nombre_Anuncio":"Lasik - Proceso","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-04-01","Etapa_CRM":"Agendados","ID_Cita":"675768","Tipo_Servicio":"Consulta Médica","Tipo_Agenda":"Consultas","Fecha_Cita":"09-04-2026","Mes_Cita":"Abril","Estado_Cita":"Atendido","Estado_Cita_Grupo":"Atendido","Especialidad":"Oftalmología","Profesional":"Daniel Braun","Primera_Cita":"SI","Prestaciones":"0101204_92110168 - Consulta Médica Oftalmología BRAUN SCHURMAN DANIEL, "},{"RUT":"8949928-3","Nombre_Paciente":"Margarita Tapia Tapia","ID_Anuncio":"120246234989290029","Nombre_Anuncio":"Oculoplastia - Caída del párpado","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-04-01","Etapa_CRM":"Agendados","ID_Cita":"675781","Tipo_Servicio":"Consulta Médica","Tipo_Agenda":"Consultas","Fecha_Cita":"07-04-2026","Mes_Cita":"Abril","Estado_Cita":"Cancelada","Estado_Cita_Grupo":"Cancelado","Especialidad":"Oftalmología","Profesional":"Bozidar Ivankovic Larraín","Primera_Cita":"SI","Prestaciones":""},{"RUT":"18581494-7","Nombre_Paciente":"MATIAS ALONSO BÓRQUEZ LEAL","ID_Anuncio":"120245471522520029","Nombre_Anuncio":"Lasik - Proceso","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-04-02","Etapa_CRM":"Perdidos","ID_Cita":"676334","Tipo_Servicio":"Examen","Tipo_Agenda":"Exámenes","Fecha_Cita":"08-04-2026","Mes_Cita":"Abril","Estado_Cita":"Recepcionado","Estado_Cita_Grupo":"Recepcionado","Especialidad":"Oftalmología","Profesional":"TM Daniela Vargas Fuentes","Primera_Cita":"NO","Prestaciones":"9910133 - Autorrefractrometría S/C Ciclo, 9910133 - Autorrefractrometría S/C Ciclo, "},{"RUT":"11548064-2","Nombre_Paciente":"Lucila Perez Venegas","ID_Anuncio":"120246234989290029","Nombre_Anuncio":"Oculoplastia - Caída del párpado","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-04-04","Etapa_CRM":"Agendados","ID_Cita":"675902","Tipo_Servicio":"Consulta Médica","Tipo_Agenda":"Consultas","Fecha_Cita":"07-04-2026","Mes_Cita":"Abril","Estado_Cita":"Agendado","Estado_Cita_Grupo":"Agendado","Especialidad":"Oftalmología","Profesional":"Christian Fontecilla Molina","Primera_Cita":"SI","Prestaciones":""},{"RUT":"15762446-6","Nombre_Paciente":"Claudio Sebastián Cueto  Vargas","ID_Anuncio":"120245471522520029","Nombre_Anuncio":"Lasik - Proceso","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-04-05","Etapa_CRM":"Perdidos","ID_Cita":"675909","Tipo_Servicio":"Consulta Médica","Tipo_Agenda":"Consultas","Fecha_Cita":"10-04-2026","Mes_Cita":"Abril","Estado_Cita":"En Atención","Estado_Cita_Grupo":"Otro","Especialidad":"Oftalmología","Profesional":"Xi Rao","Primera_Cita":"SI","Prestaciones":"0101204_146480896 - Consulta Médica Oftalmología RAO XI, "},{"RUT":"20729906-5","Nombre_Paciente":"Nicolás Andrés Bascuñan Ahumada","ID_Anuncio":"120245471723490029","Nombre_Anuncio":"Lasik - Tiempo","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-04-07","Etapa_CRM":"Perdidos","ID_Cita":"676288","Tipo_Servicio":"Examen","Tipo_Agenda":"Exámenes","Fecha_Cita":"09-04-2026","Mes_Cita":"Abril","Estado_Cita":"Recepcionado","Estado_Cita_Grupo":"Recepcionado","Especialidad":"Oftalmología","Profesional":"TM Tomás Ortiz Ponce","Primera_Cita":"SI","Prestaciones":"1201043 - Topografía Corneal Pentacam, "},{"RUT":"20729906-5","Nombre_Paciente":"Nicolás Andrés Bascuñan Ahumada","ID_Anuncio":"120245471723490029","Nombre_Anuncio":"Lasik - Tiempo","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-04-07","Etapa_CRM":"Perdidos","ID_Cita":"676496","Tipo_Servicio":"Examen","Tipo_Agenda":"Exámenes","Fecha_Cita":"09-04-2026","Mes_Cita":"Abril","Estado_Cita":"Recepcionado","Estado_Cita_Grupo":"Recepcionado","Especialidad":"Oftalmología","Profesional":"TM Daniela Vargas Fuentes","Primera_Cita":"NO","Prestaciones":"9910133 - Autorrefractrometría S/C Ciclo, "},{"RUT":"20729906-5","Nombre_Paciente":"Nicolás Andrés Bascuñan Ahumada","ID_Anuncio":"120245471723490029","Nombre_Anuncio":"Lasik - Tiempo","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-04-07","Etapa_CRM":"Perdidos","ID_Cita":"676290","Tipo_Servicio":"Examen","Tipo_Agenda":"Exámenes","Fecha_Cita":"09-04-2026","Mes_Cita":"Abril","Estado_Cita":"Agendado","Estado_Cita_Grupo":"Agendado","Especialidad":"Oftalmología","Profesional":"TM Tomás Ortiz Ponce","Primera_Cita":"NO","Prestaciones":""},{"RUT":"7249007-K","Nombre_Paciente":"Héctor Manuel Carvajal Miranda","ID_Anuncio":"120245683482050029","Nombre_Anuncio":"General Ceola","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-04-07","Etapa_CRM":"Agendados","ID_Cita":"676085","Tipo_Servicio":"Consulta Médica","Tipo_Agenda":"Consultas","Fecha_Cita":"09-04-2026","Mes_Cita":"Abril","Estado_Cita":"Cancelada","Estado_Cita_Grupo":"Cancelado","Especialidad":"Oftalmología","Profesional":"Daniel Navarrete Gómez","Primera_Cita":"SI","Prestaciones":""},{"RUT":"10334295-3","Nombre_Paciente":"Marcela Castillo  Olivares","ID_Anuncio":"120245683482050029","Nombre_Anuncio":"General Ceola","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-04-08","Etapa_CRM":"Perdidos","ID_Cita":"676201","Tipo_Servicio":"Consulta Médica","Tipo_Agenda":"Consultas","Fecha_Cita":"09-04-2026","Mes_Cita":"Abril","Estado_Cita":"Cancelada","Estado_Cita_Grupo":"Cancelado","Especialidad":"Oftalmología","Profesional":"Christian Fontecilla Molina","Primera_Cita":"SI","Prestaciones":""},{"RUT":"11535661-5","Nombre_Paciente":"julio cesar carrasco rubio","ID_Anuncio":"120245683482050029","Nombre_Anuncio":"General Ceola","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-04-08","Etapa_CRM":"Agendados","ID_Cita":"676204","Tipo_Servicio":"Consulta Médica","Tipo_Agenda":"Consultas","Fecha_Cita":"09-04-2026","Mes_Cita":"Abril","Estado_Cita":"Agendado","Estado_Cita_Grupo":"Agendado","Especialidad":"Oftalmología","Profesional":"Christian Fontecilla Molina","Primera_Cita":"SI","Prestaciones":""},{"RUT":"10711151-4","Nombre_Paciente":"Marcela del Carmen Nuñez Aravena","ID_Anuncio":"120246234989290029","Nombre_Anuncio":"Oculoplastia - Caída del párpado","Campaña":"Agendamiento DM","Estado_Anuncio":"ACTIVE","Canal_Origen":"Meta Ads → WhatsApp","Fecha_Contacto_WA":"2026-04-13","Etapa_CRM":"Proceso  de Agendamiento","ID_Cita":"672129","Tipo_Servicio":"Consulta Médica","Tipo_Agenda":"Consultas","Fecha_Cita":"03-03-2026","Mes_Cita":"Marzo","Estado_Cita":"Atendido","Estado_Cita_Grupo":"Atendido","Especialidad":"Oftalmología","Profesional":"Maria Loreto Godoy Veliz","Primera_Cita":"SI","Prestaciones":"0101204_153779368 - Consulta Médica Oftalmología  GODOY VELIZ LORETO, "}];
+const SUMMARY = [{"Nombre Anuncio":"General Ceola","Campaña":"Agendamiento DM","Estado":"ACTIVE","Pacientes Únicos":35,"Total Citas":50,"Consultas Médicas":44,"Exámenes":5,"Pabellón/Cirugía":1,"Atendidos":23,"Agendados/Pendientes":13,"Cancelados":14},{"Nombre Anuncio":"Lasik - Proceso","Campaña":"Agendamiento DM","Estado":"ACTIVE","Pacientes Únicos":11,"Total Citas":14,"Consultas Médicas":13,"Exámenes":1,"Pabellón/Cirugía":0,"Atendidos":5,"Agendados/Pendientes":5,"Cancelados":4},{"Nombre Anuncio":"Oculoplastia - Caída del párpado","Campaña":"Agendamiento DM","Estado":"ACTIVE","Pacientes Únicos":11,"Total Citas":17,"Consultas Médicas":13,"Exámenes":4,"Pabellón/Cirugía":0,"Atendidos":6,"Agendados/Pendientes":5,"Cancelados":6},{"Nombre Anuncio":"Oculoplastia - Bulto en el párpado","Campaña":"Agendamiento DM","Estado":"ACTIVE","Pacientes Únicos":3,"Total Citas":4,"Consultas Médicas":4,"Exámenes":0,"Pabellón/Cirugía":0,"Atendidos":2,"Agendados/Pendientes":0,"Cancelados":2},{"Nombre Anuncio":"Lasik - De ver mal a nítido","Campaña":"Agendamiento DM","Estado":"ACTIVE","Pacientes Únicos":2,"Total Citas":2,"Consultas Médicas":2,"Exámenes":0,"Pabellón/Cirugía":0,"Atendidos":0,"Agendados/Pendientes":2,"Cancelados":0},{"Nombre Anuncio":"Oculoplastia - Cirugía Chalazión","Campaña":"Agendamiento DM","Estado":"ACTIVE","Pacientes Únicos":1,"Total Citas":2,"Consultas Médicas":2,"Exámenes":0,"Pabellón/Cirugía":0,"Atendidos":1,"Agendados/Pendientes":1,"Cancelados":0},{"Nombre Anuncio":"Lentes vs cirugía láser","Campaña":"Agendamiento DM","Estado":"ACTIVE","Pacientes Únicos":1,"Total Citas":3,"Consultas Médicas":2,"Exámenes":1,"Pabellón/Cirugía":0,"Atendidos":3,"Agendados/Pendientes":0,"Cancelados":0},{"Nombre Anuncio":"Oculoplastia - Lagrimeo Ocular","Campaña":"Agendamiento DM","Estado":"ACTIVE","Pacientes Únicos":1,"Total Citas":1,"Consultas Médicas":1,"Exámenes":0,"Pabellón/Cirugía":0,"Atendidos":0,"Agendados/Pendientes":1,"Cancelados":0},{"Nombre Anuncio":"Lasik - Tiempo","Campaña":"Agendamiento DM","Estado":"ACTIVE","Pacientes Únicos":1,"Total Citas":3,"Consultas Médicas":0,"Exámenes":3,"Pabellón/Cirugía":0,"Atendidos":2,"Agendados/Pendientes":1,"Cancelados":0}];
+
+// ─── State ────────────────────────────────────────────────────────────────
+let filtered = [...ROWS];
+let sortField = 'Nombre_Anuncio';
+let sortAsc = true;
+let currentPage = 1;
+const pageSize = 25;
+
+// ─── Init ─────────────────────────────────────────────────────────────────
+function init() {
+  // Populate filter dropdowns
+  const ads = [...new Set(ROWS.map(r => r.Nombre_Anuncio))].sort();
+  const camps = [...new Set(ROWS.map(r => r.Campaña))].sort();
+  populateSelect('filterAd', ads);
+  populateSelect('filterCampaign', camps);
+
+  // Summary table
+  renderSummary();
+
+  // KPI - atendidos
+  const atend = ROWS.filter(r => r.Estado_Cita_Grupo === 'Atendido' || r.Estado_Cita_Grupo === 'Recepcionado').length;
+  document.getElementById('kpiAtend').textContent = atend;
+
+  applyFilters();
+}
+
+function populateSelect(id, vals) {
+  const sel = document.getElementById(id);
+  vals.forEach(v => {
+    const opt = document.createElement('option');
+    opt.value = v; opt.textContent = v;
+    sel.appendChild(opt);
+  });
+}
+
+// ─── Summary Table ────────────────────────────────────────────────────────
+function renderSummary() {
+  const maxPat = Math.max(...SUMMARY.map(s => s['Pacientes Únicos']));
+  const body = document.getElementById('summaryBody');
+  body.innerHTML = SUMMARY.map(s => {
+    const pct = Math.round((s['Pacientes Únicos'] / maxPat) * 100);
+    const statusBadge = s['Estado'] === 'ACTIVE'
+      ? '<span style="color:#2E7D32;font-weight:600;font-size:0.72rem">● Activo</span>'
+      : '<span style="color:#B71C1C;font-weight:600;font-size:0.72rem">● Pausado</span>';
+    return `<tr>
+      <td style="font-weight:600">${s['Nombre Anuncio']}</td>
+      <td style="color:var(--muted);font-size:0.8rem">${s['Campaña']}</td>
+      <td>${statusBadge}</td>
+      <td style="text-align:center;font-weight:700;color:var(--teal)">${s['Pacientes Únicos']}</td>
+      <td style="text-align:center">${s['Total Citas']}</td>
+      <td style="text-align:center"><span class="badge-service badge-consulta">${s['Consultas Médicas']}</span></td>
+      <td style="text-align:center"><span class="badge-service badge-examen">${s['Exámenes']}</span></td>
+      <td style="text-align:center"><span class="badge-service badge-pabellon">${s['Pabellón/Cirugía']}</span></td>
+      <td style="text-align:center;color:var(--green);font-weight:600">${s['Atendidos']}</td>
+      <td style="text-align:center">${s['Agendados/Pendientes']}</td>
+      <td style="text-align:center;color:var(--red)">${s['Cancelados']}</td>
+      <td class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:${pct}%"></div></div></td>
+    </tr>`;
+  }).join('');
+}
+
+// ─── Filters ──────────────────────────────────────────────────────────────
+function applyFilters() {
+  const ad      = document.getElementById('filterAd').value;
+  const camp    = document.getElementById('filterCampaign').value;
+  const svc     = document.getElementById('filterService').value;
+  const month   = document.getElementById('filterMonth').value;
+  const status  = document.getElementById('filterStatus').value;
+  const search  = document.getElementById('filterSearch').value.toLowerCase();
+
+  filtered = ROWS.filter(r => {
+    if (ad     && r.Nombre_Anuncio !== ad) return false;
+    if (camp   && r.Campaña !== camp) return false;
+    if (svc    && r.Tipo_Servicio !== svc) return false;
+    if (month  && r.Mes_Cita !== month) return false;
+    if (status && r.Estado_Cita_Grupo !== status) return false;
+    if (search && !r.Nombre_Paciente.toLowerCase().includes(search) &&
+        !r.RUT.toLowerCase().includes(search)) return false;
+    return true;
+  });
+
+  // sort
+  filtered.sort((a, b) => {
+    const va = String(a[sortField] || '');
+    const vb = String(b[sortField] || '');
+    return sortAsc ? va.localeCompare(vb) : vb.localeCompare(va);
+  });
+
+  currentPage = 1;
+  render();
+}
+
+function clearFilters() {
+  ['filterAd','filterCampaign','filterService','filterMonth','filterStatus'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('filterSearch').value = '';
+  applyFilters();
+}
+
+function sortBy(field) {
+  if (sortField === field) sortAsc = !sortAsc;
+  else { sortField = field; sortAsc = true; }
+  applyFilters();
+}
+
+// ─── Render Detail Table ──────────────────────────────────────────────────
+function render() {
+  const total = filtered.length;
+  const pages = Math.ceil(total / pageSize);
+  const start = (currentPage - 1) * pageSize;
+  const slice = filtered.slice(start, start + pageSize);
+
+  document.getElementById('resultCount').innerHTML =
+    `Mostrando <strong>${slice.length}</strong> de <strong>${total}</strong> citas${total !== ROWS.length ? ' (filtrado de ' + ROWS.length + ' total)' : ''}`;
+
+  const body = document.getElementById('detailBody');
+  body.innerHTML = slice.map(r => {
+    const svcClass = r.Tipo_Servicio === 'Consulta Médica' ? 'badge-consulta'
+                   : r.Tipo_Servicio === 'Examen' ? 'badge-examen' : 'badge-pabellon';
+    const stClass = r.Estado_Cita_Grupo === 'Atendido' ? 'status-atendido'
+                  : r.Estado_Cita_Grupo === 'Recepcionado' ? 'status-recepcion'
+                  : r.Estado_Cita_Grupo === 'Cancelado' ? 'status-cancelado'
+                  : r.Estado_Cita_Grupo === 'Agendado' ? 'status-agendado' : 'status-otro';
+    const priColor = r.Primera_Cita === 'SI' ? 'color:var(--teal);font-weight:600' : 'color:var(--muted)';
+    return `<tr>
+      <td><span class="ad-badge">${r.Nombre_Anuncio}</span></td>
+      <td style="color:var(--muted);font-size:0.78rem">${r.Campaña}</td>
+      <td>${r.Nombre_Paciente || '<span style="color:var(--muted)">—</span>'}</td>
+      <td style="font-size:0.78rem;color:var(--muted);font-family:monospace">${r.RUT}</td>
+      <td><span class="badge-service ${svcClass}">${r.Tipo_Servicio}</span></td>
+      <td style="white-space:nowrap">${r.Fecha_Cita}</td>
+      <td style="color:var(--muted);font-size:0.8rem">${r.Mes_Cita}</td>
+      <td><span class="badge-status ${stClass}">${r.Estado_Cita_Grupo}</span></td>
+      <td style="font-size:0.78rem">${r.Especialidad}</td>
+      <td style="text-align:center;font-size:0.78rem"><span style="${priColor}">${r.Primera_Cita || '—'}</span></td>
+      <td style="font-size:0.78rem;color:var(--muted);white-space:nowrap">${r.Fecha_Contacto_WA || '—'}</td>
+    </tr>`;
+  }).join('');
+
+  // Pagination
+  renderPagination(total, pages);
+}
+
+function renderPagination(total, pages) {
+  document.getElementById('pageInfo').textContent =
+    `Página ${currentPage} de ${pages} · ${total} registros`;
+
+  const btns = document.getElementById('pageBtns');
+  btns.innerHTML = '';
+
+  const addBtn = (label, page, disabled = false, active = false) => {
+    const b = document.createElement('button');
+    b.className = 'page-btn' + (active ? ' active' : '');
+    b.textContent = label;
+    b.disabled = disabled;
+    b.onclick = () => { currentPage = page; render(); };
+    btns.appendChild(b);
+  };
+
+  addBtn('← Ant', currentPage - 1, currentPage === 1);
+
+  // Page numbers
+  const start = Math.max(1, currentPage - 2);
+  const end   = Math.min(pages, currentPage + 2);
+  if (start > 1) addBtn('1', 1);
+  if (start > 2) { const s = document.createElement('span'); s.textContent = '…'; s.style.padding = '0 6px'; btns.appendChild(s); }
+  for (let p = start; p <= end; p++) addBtn(String(p), p, false, p === currentPage);
+  if (end < pages - 1) { const s = document.createElement('span'); s.textContent = '…'; s.style.padding = '0 6px'; btns.appendChild(s); }
+  if (end < pages) addBtn(String(pages), pages);
+
+  addBtn('Sig →', currentPage + 1, currentPage === pages);
+}
+
+// ─── Export CSV ───────────────────────────────────────────────────────────
+function exportCSV() {
+  const cols = ['Nombre_Anuncio','Campaña','Estado_Anuncio','Nombre_Paciente','RUT','Tipo_Servicio',
+                'Fecha_Cita','Mes_Cita','Estado_Cita','Estado_Cita_Grupo','Especialidad',
+                'Primera_Cita','Fecha_Contacto_WA','Canal_Origen'];
+  const header = cols.join(',');
+  const rows = filtered.map(r =>
+    cols.map(c => '"' + String(r[c] || '').replace(/"/g,'""') + '"').join(',')
+  );
+  const csv = '﻿' + [header, ...rows].join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = 'CEOLA_Citas_Atribuidas.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ─── Start ────────────────────────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>
