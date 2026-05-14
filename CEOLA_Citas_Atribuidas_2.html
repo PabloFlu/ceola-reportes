@@ -376,10 +376,10 @@
         <div style="font-size:0.8rem;font-weight:700;color:#3730A3;margin-bottom:4px">📲 CRM Vambee — WhatsApp entrantes</div>
         <div style="font-size:0.75rem;color:#4338CA;margin-bottom:6px">Whatsapp entrantes en CEOLA 1-feb 2026 a 14 abril 2026.csv</div>
         <div style="font-size:0.75rem;color:#374151;line-height:1.6">
-          📅 <strong>1 Feb 2026 → 14 Abr 2026</strong><br>
-          👤 1.617 contactos reales · 807 con código de anuncio · 810 orgánicos<br>
+          📅 <strong>1 Feb 2026 → 14 May 2026</strong><br>
+          👤 2.342 contactos reales · 1.234 con código de anuncio · 1.108 orgánicos<br>
           🔑 Campo clave: <code>utmCampaignId</code> = ID del anuncio Meta<br>
-          ✅ Incluye anuncios <strong>activos y pausados</strong> (captura al momento del clic)
+          ✅ Incluye anuncios <strong>activos</strong> al momento de cada contacto
         </div>
       </div>
 
@@ -399,15 +399,16 @@
         <div style="font-size:0.75rem;color:#047857;margin-bottom:6px">Citas recibidas desde febrero a abril.xlsx</div>
         <div style="font-size:0.75rem;color:#374151;line-height:1.6">
           📅 <strong>1 Feb 2026 → 14 Abr 2026</strong><br>
-          📋 5.367 citas totales: 3.470 Consultas · 1.130 Exámenes · 767 Pabellón<br>
+          📋 8.305 citas combinadas (deduplicadas): Atendido 3.986 · Recep. 1.124 · Cancelada 1.199 · Pagado 425 · Operado 626 · Falta s/a 268<br>
           🔑 Campo clave: <code>RUN/DNI_Paciente</code> = RUT del paciente<br>
+          ⚠️ Citas de Pabellón no incluidas en archivo May 2026 — se solicitó corrección
           ✅ Estados: Atendido (2.443) · Recepcionado (860) · Cancelada (814) · Agendado (248)
         </div>
       </div>
 
     </div>
     <div style="margin-top:12px;font-size:0.73rem;color:#6B7A8D;border-top:1px dashed #E5E7EB;padding-top:10px">
-      ⚠️ <strong>Limitación principal:</strong> El Detalle de Pacientes cubre hasta el 10 de Abril. Solo pacientes que contactaron entre el 11 y 14 de Abril no pueden ser cruzados (brecha de 4 días) → el impacto en el total es mínimo. · Análisis generado: Mayo 2026
+      ⚠️ <strong>Limitación principal:</strong> El Detalle de Pacientes combinado cubre hasta el 14 de Mayo. Se combinaron dos archivos de DP deduplicados por RUT → el impacto en el total es mínimo. · Análisis generado: Mayo 2026
     </div>
   </div>
 
@@ -470,7 +471,7 @@
   <!-- Red alert: March 31 cutoff -->
   <div style="background:#FFEBEE;border:2px solid #EF5350;border-radius:10px;padding:14px 20px;margin-bottom:16px;font-size:0.84rem;color:#B71C1C;font-weight:700;display:flex;align-items:flex-start;gap:10px">
     <span style="font-size:1.3rem;flex-shrink:0">🔴</span>
-    <span>LÍMITE DEL ARCHIVO PUENTE: El "Detalle de Pacientes" contiene solo pacientes que se <strong>registraron por primera vez entre el 1 Feb y el 31 Mar 2026</strong>. Esto tiene dos efectos: (1) pacientes que se registraron por primera vez en Abril no están en el puente y sus citas no se pueden atribuir; (2) pacientes que ya eran clientes antes de Febrero tampoco están. <strong>Importante:</strong> citas de Abril de pacientes que sí están en el puente (registrados Feb-Mar) sí quedan capturadas — de hecho hay 43 citas de Abril en el conjunto atribuido. El número total de pacientes y citas reales atribuidas a anuncios es mayor al reportado.</span>
+    <span>LÍMITE DEL ARCHIVO PUENTE: El "Detalle de Pacientes" contiene solo pacientes que se <strong>registraron por primera vez combinado cubre el 1 Feb al 14 May 2026</strong>. Pacientes con teléfono no registrado en el sistema clínico no pueden cruzarse. (1) Pacientes pre-Febrero sin reregistro tampoco. Ejemplo: contacto en Abril no están en el puente y sus citas no se pueden atribuir; (2) pacientes que ya eran clientes antes de Febrero tampoco están. <strong>Importante:</strong> citas de Abril de pacientes que sí están en el puente (registrados Feb-Mar) sí quedan capturadas — de hecho hay 43 citas de Abril en el conjunto atribuido. Los teléfonos registrados en el sistema clínico con formato diferente al CRM tampoco cruzan.</span>
   </div>
 
   <!-- Funnel & Pabellón context -->
@@ -478,9 +479,9 @@
 
     <!-- Lead conversion funnel -->
     <div style="background:white;border:1px solid #E0E7EF;border-radius:10px;padding:18px 20px">
-      <div style="font-size:0.85rem;font-weight:700;color:#0B1F3A;margin-bottom:14px">📊 Funnel de conversión — 757 leads únicos con anuncio</div>
+      <div style="font-size:0.85rem;font-weight:700;color:#0B1F3A;margin-bottom:14px">📊 Funnel de conversión — 1.134 leads únicos con anuncio</div>
       <div style="font-size:0.8rem;color:#374151;margin-bottom:12px">
-        ¿Por qué solo 74 de 757 cruzaron con el sistema clínico? Aquí el desglose real de los <strong>683 que no cruzaron</strong>:
+        ¿Por qué solo 147 de 1.134 cruzaron con el sistema clínico? Aquí el desglose de los <strong>987 que no cruzaron</strong>:
       </div>
       <!-- Table -->
       <table style="width:100%;border-collapse:collapse;font-size:0.79rem">
@@ -536,9 +537,9 @@
 
     <!-- Pabellón context -->
     <div style="background:white;border:1px solid #E0E7EF;border-radius:10px;padding:18px 20px">
-      <div style="font-size:0.85rem;font-weight:700;color:#0B1F3A;margin-bottom:14px">🏥 Por qué solo 1 pabellón aparece atribuido (de 767 en el período)</div>
+      <div style="font-size:0.85rem;font-weight:700;color:#0B1F3A;margin-bottom:14px">🏥 Por qué solo 1 pabellón aparece atribuido (archivo May 2026 no incluye Pabellón)</div>
       <div style="font-size:0.79rem;color:#374151;line-height:1.8">
-        Esto <strong>no significa</strong> que los ads no generan cirugías. Hay dos razones estructurales:
+        Esto <strong>no significa</strong> que los ads no generan cirugías. El archivo May 2026 fue exportado sin Pabellón — se solicitó corrección. Adicionalmente:
       </div>
       <div style="margin-top:12px;display:flex;flex-direction:column;gap:10px">
         <div style="background:#FFF8E1;border-left:3px solid #FFA000;border-radius:6px;padding:10px 14px;font-size:0.79rem;color:#4A3600;line-height:1.6">
@@ -559,12 +560,12 @@
 
   <!-- Organic traffic note -->
   <div style="background:#FFEBEE;border:2px solid #EF5350;border-left:4px solid #B71C1C;border-radius:10px;padding:16px 20px;margin-bottom:20px;font-size:0.82rem;line-height:1.8;color:#3D0000">
-    <strong style="font-size:0.88rem">🔴 Los 810 contactos orgánicos (sin código de anuncio) no son necesariamente espontáneos</strong><br>
+    <strong style="font-size:0.88rem">🔴 Los 1.108 contactos orgánicos (sin código de anuncio) no son necesariamente espontáneos</strong><br>
     Al revisar el origen de los contactos sin UTM en el CRM, se identificaron <strong>3 canales distintos</strong>:
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-top:12px;margin-bottom:12px">
       <div style="background:#FFCDD2;border-radius:8px;padding:10px 14px;text-align:center">
         <div style="font-size:1.2rem;font-weight:800;color:#B71C1C">696</div>
-        <div style="font-size:0.72rem;font-weight:700;color:#B71C1C">WhatsApp directo</div>
+        <div style="font-size:0.72rem;font-weight:700;color:#B71C1C">955 · WhatsApp directo</div>
         <div style="font-size:0.69rem;color:#7B1C1C;margin-top:2px">Vieron el número en algún lado (Google, web, de boca en boca) y escribieron directo</div>
       </div>
       <div style="background:#FCE4EC;border-radius:8px;padding:10px 14px;text-align:center">
@@ -977,7 +978,7 @@ function renderPagination(total, pages) {
 
 // ─── Export CSV ───────────────────────────────────────────────────────────
 function exportCSV() {
-  const cols = ['Nombre_Anuncio','Campaña','Estado_Anuncio','Nombre_Paciente','RUT','Tipo_Servicio',
+  const cols = ['Nombre_Anuncio','Campaña','Canal_Origen','Nombre_Paciente','RUT','Tipo_Servicio',
                 'Fecha_Cita','Mes_Cita','Estado_Cita','Estado_Cita_Grupo','Especialidad',
                 'Primera_Cita','Fecha_Contacto_WA','Canal_Origen'];
   const header = cols.join(',');
