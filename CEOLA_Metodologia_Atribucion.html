@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CEOLA — Metodología de Atribución</title>
+<style>
+  :root {
+    --dark:   #0B1F3A;
+    --teal:   #00897B;
+    --cyan:   #00BCD4;
+    --amber:  #FFA000;
+    --red:    #EF5350;
+    --green:  #43A047;
+    --purple: #7B1FA2;
+    --blue:   #1565C0;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #F0F4F8;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 32px 20px;
+  }
+
+  .page-title {
+    text-align: center;
+    margin-bottom: 36px;
+  }
+  .page-title h1 {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--dark);
+  }
+  .page-title p {
+    font-size: 0.9rem;
+    color: #6B7A8D;
+    margin-top: 6px;
+  }
+
+  .diagram {
+    width: 100%;
+    max-width: 1100px;
+  }
+
+  /* Flow row */
+  .flow-row {
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+    gap: 0;
+    margin-bottom: 0;
+  }
+
+  .flow-node {
+    background: white;
+    border-radius: 16px;
+    padding: 24px 20px;
+    text-align: center;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.09);
+    min-width: 200px;
+    flex: 1;
+    max-width: 240px;
+    position: relative;
+    border-top: 5px solid var(--dark);
+  }
+  .flow-node.source { border-top-color: #1565C0; }
+  .flow-node.bridge { border-top-color: var(--amber); }
+  .flow-node.clinical { border-top-color: var(--purple); }
+  .flow-node.result { border-top-color: var(--teal); }
+
+  .flow-node .icon {
+    font-size: 2.4rem;
+    margin-bottom: 10px;
+    display: block;
+  }
+  .flow-node .node-title {
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: var(--dark);
+    margin-bottom: 6px;
+  }
+  .flow-node .node-subtitle {
+    font-size: 0.72rem;
+    color: #6B7A8D;
+    margin-bottom: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .flow-node .node-desc {
+    font-size: 0.8rem;
+    color: #4A5568;
+    line-height: 1.5;
+    text-align: left;
+  }
+  .flow-node .node-fields {
+    margin-top: 12px;
+    text-align: left;
+  }
+  .field-tag {
+    display: inline-block;
+    background: #F0F4F8;
+    border: 1px solid #CBD5E0;
+    border-radius: 6px;
+    padding: 3px 8px;
+    font-size: 0.7rem;
+    font-family: 'Courier New', monospace;
+    color: var(--dark);
+    margin: 2px 2px 2px 0;
+  }
+  .field-tag.key {
+    background: #E3F2FD;
+    border-color: #90CAF9;
+    color: var(--blue);
+    font-weight: 700;
+  }
+  .flow-node .count-badge {
+    background: var(--dark);
+    color: white;
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    display: inline-block;
+    margin-top: 10px;
+  }
+  .flow-node.source .count-badge { background: var(--blue); }
+  .flow-node.bridge .count-badge { background: var(--amber); color: var(--dark); }
+  .flow-node.clinical .count-badge { background: var(--purple); }
+  .flow-node.result .count-badge { background: var(--teal); }
+
+  /* Connector arrows */
+  .arrow-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0 6px;
+    min-width: 80px;
+    flex-shrink: 0;
+  }
+  .arrow-line {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    width: 100%;
+  }
+  .arrow-body {
+    flex: 1;
+    height: 3px;
+    background: linear-gradient(90deg, #CBD5E0, var(--cyan));
+    border-radius: 2px;
+  }
+  .arrow-head {
+    width: 0;
+    height: 0;
+    border-top: 8px solid transparent;
+    border-bottom: 8px solid transparent;
+    border-left: 12px solid var(--cyan);
+  }
+  .arrow-label {
+    font-size: 0.68rem;
+    color: #6B7A8D;
+    text-align: center;
+    margin-top: 6px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .arrow-key {
+    font-size: 0.72rem;
+    font-family: 'Courier New', monospace;
+    color: var(--cyan);
+    font-weight: 700;
+    white-space: nowrap;
+    margin-top: 2px;
+    text-align: center;
+  }
+
+  /* Funnel below */
+  .funnel-section {
+    margin-top: 40px;
+    width: 100%;
+    max-width: 1100px;
+  }
+  .funnel-title {
+    text-align: center;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--dark);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .funnel-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+  }
+  .funnel-row {
+    display: grid;
+    grid-template-columns: 36px 260px 80px 1fr;
+    align-items: center;
+    width: 100%;
+    gap: 14px;
+    background: white;
+    border-radius: 10px;
+    padding: 14px 18px;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+  }
+  .funnel-step-num {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--dark);
+    color: white;
+    font-size: 0.78rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .funnel-row-label {
+    font-size: 0.84rem;
+    font-weight: 700;
+    color: var(--dark);
+    line-height: 1.3;
+  }
+  .funnel-row-label small {
+    display: block;
+    font-size: 0.72rem;
+    font-weight: 400;
+    color: #6B7A8D;
+    margin-top: 2px;
+  }
+  .funnel-count {
+    text-align: right;
+    font-size: 1.1rem;
+    font-weight: 800;
+    white-space: nowrap;
+    line-height: 1.2;
+  }
+  .funnel-count small {
+    display: block;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #6B7A8D;
+  }
+  .funnel-bar-wrap {
+    position: relative;
+    height: 12px;
+    border-radius: 6px;
+    background: #E8EEF4;
+    overflow: hidden;
+  }
+  .funnel-bar-fill {
+    height: 100%;
+    border-radius: 6px;
+    transition: width 1s ease;
+  }
+  .funnel-note {
+    grid-column: 2 / -1;
+    font-size: 0.76rem;
+    color: #718096;
+    line-height: 1.5;
+    padding-top: 4px;
+    border-top: 1px dashed #E2E8F0;
+    margin-top: 4px;
+  }
+  .funnel-row-has-note {
+    grid-template-rows: auto auto;
+  }
+
+  /* Data model table */
+  .model-table-section {
+    margin-top: 40px;
+    width: 100%;
+    max-width: 1100px;
+    background: white;
+    border-radius: 16px;
+    padding: 28px 28px;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.07);
+  }
+  .model-table-title {
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: var(--dark);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .model-tables-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+  }
+  .model-table-card {
+    border: 1.5px solid #E2E8F0;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .model-table-header {
+    padding: 10px 14px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: white;
+  }
+  .model-table-body { padding: 12px 14px; }
+  .model-field {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 0;
+    border-bottom: 1px solid #F0F4F8;
+    font-size: 0.78rem;
+  }
+  .model-field:last-child { border-bottom: none; }
+  .field-name {
+    font-family: 'Courier New', monospace;
+    color: var(--dark);
+    font-weight: 600;
+    min-width: 100px;
+  }
+  .field-type {
+    color: #6B7A8D;
+    font-size: 0.7rem;
+  }
+  .field-key-icon {
+    font-size: 0.7rem;
+    padding: 2px 5px;
+    border-radius: 4px;
+    font-weight: 700;
+  }
+  .pk { background: #FFF8E1; color: #E65100; }
+  .fk { background: #E3F2FD; color: #1565C0; }
+  .join { background: #E8F5E9; color: #2E7D32; }
+
+  /* Note box */
+  .note-box {
+    margin-top: 32px;
+    width: 100%;
+    max-width: 1100px;
+    background: #FFF8E1;
+    border: 1px solid #FFE082;
+    border-left: 4px solid var(--amber);
+    border-radius: 10px;
+    padding: 16px 20px;
+    font-size: 0.83rem;
+    line-height: 1.7;
+    color: #4A3600;
+  }
+  .note-box strong { color: var(--dark); }
+
+  @media (max-width: 700px) {
+    .flow-row { flex-direction: column; align-items: center; }
+    .arrow-col { transform: rotate(90deg); min-width: 60px; }
+    .flow-node { max-width: 100%; }
+  }
+</style>
+</head>
+<body>
+<!-- PASSWORD GATE -->
+<div id="pw-gate" style="position:fixed;inset:0;z-index:9999;background:#0B1F3A;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:24px;">
+  <div style="text-align:center;color:white;">
+    <div style="font-size:13px;letter-spacing:3px;text-transform:uppercase;color:#00ACC1;margin-bottom:8px;">CEOLA VIÑA DEL MAR</div>
+    <div style="font-size:22px;font-weight:700;margin-bottom:4px;">Metodología de Atribución</div>
+    <div style="font-size:14px;color:#8EAFC2;">Documento confidencial — ingresa la clave de acceso</div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:12px;align-items:center;">
+    <input id="pw-input" type="password" placeholder="Clave de acceso"
+      style="padding:12px 20px;border-radius:8px;border:2px solid #1E4060;background:#0F2A45;color:white;font-size:16px;width:260px;outline:none;text-align:center;"
+      onkeydown="if(event.key==='Enter')checkPW()">
+    <button onclick="checkPW()"
+      style="padding:12px 40px;background:#00897B;color:white;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;width:260px;">
+      Ingresar
+    </button>
+    <div id="pw-err" style="color:#EF5350;font-size:13px;display:none;">Clave incorrecta. Intenta nuevamente.</div>
+  </div>
+</div>
+<script>
+(function(){
+  if(sessionStorage.getItem('ceola_auth')==='1'){document.getElementById('pw-gate').style.display='none';}
+  window.checkPW=function(){
+    var v=document.getElementById('pw-input').value;
+    if(v==='ceolafluvo26'){sessionStorage.setItem('ceola_auth','1');document.getElementById('pw-gate').style.display='none';}
+    else{document.getElementById('pw-err').style.display='block';document.getElementById('pw-input').value='';document.getElementById('pw-input').focus();}
+  };
+})();
+</script>
+
+<div class="page-title">
+  <h1>🔬 CEOLA — Modelo de Atribución de Pacientes</h1>
+  <p>Metodología para cruzar anuncios Meta Ads → WhatsApp CRM → Sistema Clínico de Citas</p>
+</div>
+
+<!-- Sources Summary -->
+<div style="width:100%;max-width:1100px;background:white;border:1px solid #E0E7EF;border-radius:12px;padding:20px 24px;margin-bottom:28px">
+  <div style="font-size:0.78rem;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:#6B7A8D;margin-bottom:14px">📁 Documentos utilizados en este análisis</div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px">
+
+    <div style="border:1px solid #C7D2FE;border-left:4px solid #3730A3;border-radius:8px;padding:12px 16px;background:#EEF2FF">
+      <div style="font-size:0.8rem;font-weight:700;color:#3730A3;margin-bottom:4px">📲 CRM Vambee — WhatsApp entrantes</div>
+      <div style="font-size:0.73rem;color:#4338CA;margin-bottom:6px">Whatsapp entrantes en CEOLA 1-feb 2026 a 14 abril 2026.csv</div>
+      <div style="font-size:0.73rem;color:#374151;line-height:1.7">
+        📅 <strong>1 Feb 2026 → 14 Abr 2026</strong><br>
+        👤 1.617 contactos reales · 807 con código de anuncio · 810 orgánicos<br>
+        🔑 Campo clave: <code>utmCampaignId</code> = ID del anuncio Meta<br>
+        ✅ Incluye anuncios <strong>activos y pausados</strong> (el código se captura al momento del clic, independiente del estado actual del anuncio)
+      </div>
+    </div>
+
+    <div style="border:1px solid #FCD34D;border-left:4px solid #D97706;border-radius:8px;padding:12px 16px;background:#FFFBEB">
+      <div style="font-size:0.8rem;font-weight:700;color:#92400E;margin-bottom:4px">🗂️ Detalle de Pacientes — Archivo puente</div>
+      <div style="font-size:0.73rem;color:#B45309;margin-bottom:6px">Detalle de pacientes Febrero Abril.xlsx</div>
+      <div style="font-size:0.73rem;color:#374151;line-height:1.7">
+        📅 <strong>1 Feb 2026 → 31 Mar 2026</strong><br>
+        👤 1.733 pacientes registrados en el período<br>
+        🔑 Vincula Teléfono ↔ RUT/Identificación (identificador clínico)<br>
+        ⚠️ <strong>No incluye pacientes nuevos de Abril</strong> — pacientes que contactaron en Abril sin registro previo no se pueden cruzar
+      </div>
+    </div>
+
+    <div style="border:1px solid #A7F3D0;border-left:4px solid #059669;border-radius:8px;padding:12px 16px;background:#ECFDF5">
+      <div style="font-size:0.8rem;font-weight:700;color:#065F46;margin-bottom:4px">🏥 Sistema Clínico — Citas</div>
+      <div style="font-size:0.73rem;color:#047857;margin-bottom:6px">Citas recibidas desde febrero a abril.xlsx</div>
+      <div style="font-size:0.73rem;color:#374151;line-height:1.7">
+        📅 <strong>1 Feb 2026 → 14 Abr 2026</strong><br>
+        📋 5.367 citas: 3.470 Consultas · 1.130 Exámenes · 767 Pabellón<br>
+        🔑 Campo clave: <code>RUN/DNI_Paciente</code> = RUT del paciente<br>
+        ✅ Atendido (2.443) · Recepcionado (860) · Cancelada (814) · Agendado (248)
+      </div>
+    </div>
+
+  </div>
+  <div style="margin-top:12px;font-size:0.72rem;color:#6B7A8D;border-top:1px dashed #E5E7EB;padding-top:10px">
+    ⚠️ <strong>Limitación principal:</strong> El archivo de Detalle Pacientes cubre solo hasta el 31 de Marzo. Pacientes nuevos que llegaron en Abril no pueden ser cruzados contra citas, por lo que el resultado real de atribución puede ser superior a los 66 pacientes / 96 citas identificados. · Generado: Mayo 2026
+  </div>
+</div>
+
+<!-- FLOW DIAGRAM -->
+<div class="diagram">
+  <div class="flow-row">
+
+    <!-- Node 1: Meta Ads -->
+    <div class="flow-node source">
+      <span class="icon">📣</span>
+      <div class="node-subtitle">Origen</div>
+      <div class="node-title">Meta Ads</div>
+      <div class="node-desc">
+        Anuncios en Facebook e Instagram con enlace directo a WhatsApp de CEOLA. Cada anuncio tiene un ID único.
+      </div>
+      <div class="node-fields">
+        <span class="field-tag">Ad ID</span>
+        <span class="field-tag">Nombre anuncio</span>
+        <span class="field-tag">Campaña</span>
+        <span class="field-tag">Inversión</span>
+      </div>
+      <div class="count-badge">16 anuncios activos</div>
+    </div>
+
+    <!-- Arrow 1 -->
+    <div class="arrow-col">
+      <div class="arrow-line">
+        <div class="arrow-body"></div>
+        <div class="arrow-head"></div>
+      </div>
+      <div class="arrow-label">Click en ad<br>→ abre WhatsApp</div>
+    </div>
+
+    <!-- Node 2: Vambee CRM -->
+    <div class="flow-node source">
+      <span class="icon">💬</span>
+      <div class="node-subtitle">Base 1 — CRM</div>
+      <div class="node-title">Vambee CRM</div>
+      <div class="node-desc">
+        Captura el mensaje de WhatsApp junto con el código del anuncio que lo originó (<code>utmCampaignId</code>).
+      </div>
+      <div class="node-fields">
+        <span class="field-tag key">phone</span>
+        <span class="field-tag key">utmCampaignId = Ad ID</span>
+        <span class="field-tag">pipeline / stage</span>
+        <span class="field-tag">createdAt</span>
+      </div>
+      <div class="count-badge">807 contactos con ad</div>
+    </div>
+
+    <!-- Arrow 2 -->
+    <div class="arrow-col">
+      <div class="arrow-line">
+        <div class="arrow-body"></div>
+        <div class="arrow-head"></div>
+      </div>
+      <div class="arrow-label">JOIN por</div>
+      <div class="arrow-key">phone = Teléfono</div>
+    </div>
+
+    <!-- Node 3: Detalle Pacientes -->
+    <div class="flow-node bridge">
+      <span class="icon">🗂️</span>
+      <div class="node-subtitle">Base 2 — Puente</div>
+      <div class="node-title">Detalle Pacientes</div>
+      <div class="node-desc">
+        Archivo exportado del sistema clínico. Vincula el teléfono del paciente con su RUT (identificador único en el sistema).
+      </div>
+      <div class="node-fields">
+        <span class="field-tag key">Teléfono 1 / Teléfono 2</span>
+        <span class="field-tag key">Identificación (RUT)</span>
+        <span class="field-tag">Nombres / Apellidos</span>
+      </div>
+      <div class="count-badge">1.733 pacientes · 74 cruces</div>
+    </div>
+
+    <!-- Arrow 3 -->
+    <div class="arrow-col">
+      <div class="arrow-line">
+        <div class="arrow-body"></div>
+        <div class="arrow-head"></div>
+      </div>
+      <div class="arrow-label">JOIN por</div>
+      <div class="arrow-key">RUT = RUN/DNI</div>
+    </div>
+
+    <!-- Node 4: Sistema Clínico -->
+    <div class="flow-node clinical">
+      <span class="icon">🏥</span>
+      <div class="node-subtitle">Base 3 — Citas</div>
+      <div class="node-title">Sistema Clínico</div>
+      <div class="node-desc">
+        Registro oficial de citas: fecha, tipo (consulta/examen/pabellón), estado (atendido/cancelado) y prestaciones.
+      </div>
+      <div class="node-fields">
+        <span class="field-tag key">RUN/DNI_Paciente</span>
+        <span class="field-tag">ID_Cita</span>
+        <span class="field-tag">Tipo_Agenda</span>
+        <span class="field-tag">Estado</span>
+        <span class="field-tag">Prestaciones</span>
+      </div>
+      <div class="count-badge">5.367 citas en el período</div>
+    </div>
+
+    <!-- Arrow 4 -->
+    <div class="arrow-col">
+      <div class="arrow-line">
+        <div class="arrow-body" style="background:linear-gradient(90deg,#CBD5E0,var(--teal))"></div>
+        <div class="arrow-head" style="border-left-color:var(--teal)"></div>
+      </div>
+      <div class="arrow-label">Resultado</div>
+    </div>
+
+    <!-- Node 5: Result -->
+    <div class="flow-node result">
+      <span class="icon">✅</span>
+      <div class="node-subtitle">Resultado</div>
+      <div class="node-title">Citas Atribuidas</div>
+      <div class="node-desc">
+        Pacientes confirmados que llegaron desde un anuncio Meta Ads y tienen cita registrada en el sistema clínico.
+      </div>
+      <div class="node-fields">
+        <span class="field-tag">Ad → paciente → cita</span>
+        <span class="field-tag">Tipo de servicio</span>
+        <span class="field-tag">Estado de atención</span>
+      </div>
+      <div class="count-badge" style="font-size:0.85rem">66 pacientes · 96 citas</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- FUNNEL -->
+<div class="funnel-section">
+  <div class="funnel-title">📊 Funnel de Atribución — Pérdidas en cada etapa</div>
+  <div class="funnel-grid">
+
+    <!-- Step 0 -->
+    <div class="funnel-row">
+      <div class="funnel-step-num">0</div>
+      <div class="funnel-row-label">
+        Total contactos WhatsApp
+        <small>1.617 registros reales · el CSV tiene 1.861 líneas porque algunos mensajes contienen saltos de línea internos</small>
+      </div>
+      <div class="funnel-count" style="color:#1565C0">1.617
+        <small>100%</small>
+      </div>
+      <div class="funnel-bar-wrap">
+        <div class="funnel-bar-fill" style="width:100%;background:#1565C0"></div>
+      </div>
+    </div>
+
+    <!-- Step 1 -->
+    <div class="funnel-row">
+      <div class="funnel-step-num">1</div>
+      <div class="funnel-row-label">
+        Con código de anuncio (utmCampaignId)
+        <small>⚠️ 52% son orgánicos: WhatsApp sin UTM no captura origen del anuncio</small>
+      </div>
+      <div class="funnel-count" style="color:#0277BD">807
+        <small>48%</small>
+      </div>
+      <div class="funnel-bar-wrap">
+        <div class="funnel-bar-fill" style="width:48%;background:#0277BD"></div>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="funnel-row">
+      <div class="funnel-step-num">2</div>
+      <div class="funnel-row-label">
+        Teléfonos únicos con ads
+        <small>Deduplicación: mismo número puede haber escrito varias veces</small>
+      </div>
+      <div class="funnel-count" style="color:#00838F">757
+        <small>45%</small>
+      </div>
+      <div class="funnel-bar-wrap">
+        <div class="funnel-bar-fill" style="width:45%;background:#00838F"></div>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="funnel-row">
+      <div class="funnel-step-num" style="background:var(--amber);color:#333">3</div>
+      <div class="funnel-row-label">
+        Cruce teléfono → RUT (Detalle Pacientes)
+        <small>⚠️ De los 683 no cruzados: 507 (74%) lost en CRM (nunca llegaron), 159 (23%) pendientes, 17 (2%) won+atendidos pero contactaron en Abril (fuera del rango del DP)</small>
+      </div>
+      <div class="funnel-count" style="color:var(--amber)">74
+        <small>4.4%</small>
+      </div>
+      <div class="funnel-bar-wrap">
+        <div class="funnel-bar-fill" style="width:9%;background:var(--amber)"></div>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="funnel-row">
+      <div class="funnel-step-num" style="background:var(--purple)">4</div>
+      <div class="funnel-row-label">
+        Pacientes con cita en sistema clínico
+        <small>66 de los 74 RUTs tienen al menos 1 cita registrada</small>
+      </div>
+      <div class="funnel-count" style="color:var(--purple)">66
+        <small>3.9%</small>
+      </div>
+      <div class="funnel-bar-wrap">
+        <div class="funnel-bar-fill" style="width:8%;background:var(--purple)"></div>
+      </div>
+    </div>
+
+    <!-- Result -->
+    <div class="funnel-row" style="border:2px solid var(--teal)">
+      <div class="funnel-step-num" style="background:var(--teal)">✓</div>
+      <div class="funnel-row-label">
+        Total citas atribuidas a anuncios Meta
+        <small>Consultas + exámenes + pabellón de esos 66 pacientes (algunos tienen múltiples citas)</small>
+      </div>
+      <div class="funnel-count" style="color:var(--teal)">96
+        <small>citas</small>
+      </div>
+      <div class="funnel-bar-wrap">
+        <div class="funnel-bar-fill" style="width:8%;background:var(--teal)"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- DATA MODEL -->
+<div class="model-table-section">
+  <div class="model-table-title">🗃️ Modelo de datos — Esquema de los tres archivos</div>
+  <div class="model-tables-row">
+
+    <!-- CRM -->
+    <div class="model-table-card">
+      <div class="model-table-header" style="background:#1565C0">Vambee CRM (WhatsApp)</div>
+      <div class="model-table-body">
+        <div class="model-field">
+          <span class="field-name">phone</span>
+          <span class="field-type">string</span>
+          <span class="field-key-icon join">JOIN →</span>
+        </div>
+        <div class="model-field">
+          <span class="field-name">utmCampaignId</span>
+          <span class="field-type">= Ad ID</span>
+          <span class="field-key-icon pk">KEY</span>
+        </div>
+        <div class="model-field">
+          <span class="field-name">adContent</span>
+          <span class="field-type">string</span>
+        </div>
+        <div class="model-field">
+          <span class="field-name">stage</span>
+          <span class="field-type">pipeline stage</span>
+        </div>
+        <div class="model-field">
+          <span class="field-name">createdAt</span>
+          <span class="field-type">datetime</span>
+        </div>
+        <div class="model-field">
+          <span class="field-name">customer_rut</span>
+          <span class="field-type">vacío en ads</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Detalle Pacientes -->
+    <div class="model-table-card">
+      <div class="model-table-header" style="background:#E65100">Detalle Pacientes (Puente)</div>
+      <div class="model-table-body">
+        <div class="model-field">
+          <span class="field-name">Teléfono 1</span>
+          <span class="field-type">string</span>
+          <span class="field-key-icon fk">← FK</span>
+        </div>
+        <div class="model-field">
+          <span class="field-name">Teléfono 2</span>
+          <span class="field-type">string (alt.)</span>
+          <span class="field-key-icon fk">← FK</span>
+        </div>
+        <div class="model-field">
+          <span class="field-name">Identificación</span>
+          <span class="field-type">RUT</span>
+          <span class="field-key-icon join">JOIN →</span>
+        </div>
+        <div class="model-field">
+          <span class="field-name">Nombres</span>
+          <span class="field-type">string</span>
+        </div>
+        <div class="model-field">
+          <span class="field-name">Apellidos</span>
+          <span class="field-type">string</span>
+        </div>
+        <div class="model-field">
+          <span class="field-name">Fecha Creación</span>
+          <span class="field-type">date</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Citas -->
+    <div class="model-table-card">
+      <div class="model-table-header" style="background:#6A1B9A">Sistema Clínico (Citas)</div>
+      <div class="model-table-body">
+        <div class="model-field">
+          <span class="field-name">RUN/DNI_Paciente</span>
+          <span class="field-type">RUT</span>
+          <span class="field-key-icon fk">← FK</span>
+        </div>
+        <div class="model-field">
+          <span class="field-name">ID_Cita</span>
+          <span class="field-type">integer</span>
+          <span class="field-key-icon pk">PK</span>
+        </div>
+        <div class="model-field">
+          <span class="field-name">Tipo_Agenda</span>
+          <span class="field-type">Consulta/Examen/Pab.</span>
+        </div>
+        <div class="model-field">
+          <span class="field-name">Dia_Cita</span>
+          <span class="field-type">date</span>
+        </div>
+        <div class="model-field">
+          <span class="field-name">Estado</span>
+          <span class="field-type">Atendido/Cancelado…</span>
+        </div>
+        <div class="model-field">
+          <span class="field-name">Prestaciones</span>
+          <span class="field-type">procedimientos</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Result -->
+    <div class="model-table-card">
+      <div class="model-table-header" style="background:var(--teal)">Resultado (Atribución)</div>
+      <div class="model-table-body">
+        <div class="model-field">
+          <span class="field-name">Nombre_Anuncio</span>
+          <span class="field-type">de CRM</span>
+        </div>
+        <div class="model-field">
+          <span class="field-name">Canal_Origen</span>
+          <span class="field-type">Meta Ads→WA</span>
+        </div>
+        <div class="model-field">
+          <span class="field-name">RUT</span>
+          <span class="field-type">identificador</span>
+        </div>
+        <div class="model-field">
+          <span class="field-name">Tipo_Servicio</span>
+          <span class="field-type">clasificado</span>
+        </div>
+        <div class="model-field">
+          <span class="field-name">Estado_Cita</span>
+          <span class="field-type">de citas</span>
+        </div>
+        <div class="model-field">
+          <span class="field-name">Fecha_Cita</span>
+          <span class="field-type">de citas</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- NOTE BOX -->
+<!-- Red alert: March 31 cutoff -->
+<div style="width:100%;max-width:1100px;background:#FFEBEE;border:2px solid #EF5350;border-radius:12px;padding:16px 22px;margin-bottom:20px;font-size:0.85rem;color:#B71C1C;font-weight:700;display:flex;align-items:flex-start;gap:12px">
+  <span style="font-size:1.5rem;flex-shrink:0">🔴</span>
+  <span>LÍMITE DEL ARCHIVO PUENTE: El "Detalle de Pacientes" contiene solo pacientes que <strong>se registraron por primera vez entre el 1 Feb y el 31 Mar 2026</strong>. Dos efectos: (1) pacientes que se registraron en Abril por primera vez no están → sus citas no se pueden atribuir; (2) pacientes ya existentes antes de Febrero tampoco están. <strong>Ojo:</strong> citas de Abril de pacientes registrados en Feb-Mar sí quedan capturadas (hay 43 citas de Abril en el resultado). El número real atribuible es mayor al reportado.</span>
+</div>
+
+<!-- Lead funnel + pabellón grid -->
+<div style="width:100%;max-width:1100px;display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:18px;margin-bottom:20px">
+
+  <!-- Funnel card -->
+  <div style="background:white;border:1px solid #E2E8F0;border-radius:12px;padding:20px 22px;box-shadow:0 2px 10px rgba(0,0,0,0.06)">
+    <div style="font-size:0.88rem;font-weight:800;color:#0B1F3A;margin-bottom:14px">📊 Funnel de conversión — 757 leads únicos con anuncio</div>
+    <div style="font-size:0.79rem;color:#4A5568;margin-bottom:12px">¿Por qué solo 74 de 757 cruzaron con el sistema clínico? Desglose real de los <strong>683 que no cruzaron:</strong></div>
+    <table style="width:100%;border-collapse:collapse;font-size:0.79rem;margin-bottom:14px">
+      <thead>
+        <tr style="background:#F7FAFC">
+          <th style="padding:8px 10px;text-align:left;color:#4A5568;font-weight:700;border-bottom:2px solid #E2E8F0">Razón</th>
+          <th style="padding:8px 10px;text-align:center;color:#4A5568;font-weight:700;border-bottom:2px solid #E2E8F0">N°</th>
+          <th style="padding:8px 10px;text-align:center;color:#4A5568;font-weight:700;border-bottom:2px solid #E2E8F0">%</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr style="border-bottom:1px solid #F0F4F8">
+          <td style="padding:8px 10px"><strong style="color:#B71C1C">Lost en CRM</strong> — consultaron pero nunca llegaron a la clínica</td>
+          <td style="padding:8px 10px;text-align:center;font-weight:800;color:#B71C1C">507</td>
+          <td style="padding:8px 10px;text-align:center;color:#B71C1C;font-weight:700">74%</td>
+        </tr>
+        <tr style="border-bottom:1px solid #F0F4F8">
+          <td style="padding:8px 10px"><strong style="color:#1565C0">Pending en CRM</strong> — aún en pipeline, pueden convertir</td>
+          <td style="padding:8px 10px;text-align:center;font-weight:800;color:#1565C0">159</td>
+          <td style="padding:8px 10px;text-align:center;color:#1565C0;font-weight:700">23%</td>
+        </tr>
+        <tr>
+          <td style="padding:8px 10px"><strong style="color:#2E7D32">Won + atendidos en Vambee, sin cruce</strong> — agendaron y asistieron según CRM, pero la mayoría contactó en Abril (fuera del rango del DP)</td>
+          <td style="padding:8px 10px;text-align:center;font-weight:800;color:#2E7D32">17</td>
+          <td style="padding:8px 10px;text-align:center;color:#2E7D32;font-weight:700">3%</td>
+        </tr>
+      </tbody>
+    </table>
+    <div style="display:flex;gap:8px;margin-bottom:12px">
+      <div style="background:#FFEBEE;border-radius:8px;padding:8px 10px;text-align:center;flex:1">
+        <div style="font-size:1.15rem;font-weight:800;color:#B71C1C">537</div>
+        <div style="font-size:0.67rem;color:#B71C1C;font-weight:700">LOST · 71%</div>
+      </div>
+      <div style="background:#E3F2FD;border-radius:8px;padding:8px 10px;text-align:center;flex:1">
+        <div style="font-size:1.15rem;font-weight:800;color:#1565C0">181</div>
+        <div style="font-size:0.67rem;color:#1565C0;font-weight:700">PENDING · 24%</div>
+      </div>
+      <div style="background:#E8F5E9;border-radius:8px;padding:8px 10px;text-align:center;flex:1">
+        <div style="font-size:1.15rem;font-weight:800;color:#2E7D32">39</div>
+        <div style="font-size:0.67rem;color:#2E7D32;font-weight:700">WON · 5%</div>
+      </div>
+    </div>
+    <div style="background:#F0FDF4;border-radius:8px;padding:10px 13px;font-size:0.76rem;color:#14532D;line-height:1.6">
+      💡 De cada 100 personas que ven un anuncio y escriben por WhatsApp, <strong>~5 son marcadas como "ganadas" en el CRM</strong> y <strong>~10 terminan registradas en el sistema clínico</strong>. Ese es el ratio real de conversión lead → paciente.
+    </div>
+  </div>
+
+  <!-- Pabellón card -->
+  <div style="background:white;border:1px solid #E2E8F0;border-radius:12px;padding:20px 22px;box-shadow:0 2px 10px rgba(0,0,0,0.06)">
+    <div style="font-size:0.88rem;font-weight:800;color:#0B1F3A;margin-bottom:14px">🏥 Por qué solo 1 pabellón atribuido (de 767 en el período)</div>
+    <div style="font-size:0.79rem;color:#4A5568;margin-bottom:12px">Esto <strong>no significa</strong> que los ads no generan cirugías. Dos razones estructurales:</div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div style="background:#FFF8E1;border-left:3px solid #FFA000;border-radius:6px;padding:10px 14px;font-size:0.79rem;color:#4A3600;line-height:1.6">
+        <strong>⏳ El embudo quirúrgico es largo:</strong> un paciente que vio un ad de Lasik u Oculoplastia en Febrero primero agenda <em>consulta</em> → luego <em>exámenes</em> → luego <em>pabellón</em>. Ese ciclo puede tardar 1–3 meses. La consulta queda dentro del período de análisis, pero la cirugía puede quedar fuera.
+      </div>
+      <div style="background:#FFEBEE;border-left:3px solid #EF5350;border-radius:6px;padding:10px 14px;font-size:0.79rem;color:#B71C1C;line-height:1.6">
+        <strong>🔴 Detalle Pacientes corta al 31 de Marzo:</strong> pacientes que llegaron por ads en Febrero–Marzo y agendaron cirugía en Abril no están en el archivo puente. Su pabellón no se puede atribuir.
+      </div>
+      <div style="background:#F3E5F5;border-left:3px solid #7B1FA2;border-radius:6px;padding:10px 14px;font-size:0.79rem;color:#4A148C;line-height:1.6">
+        <strong>📋 Sistema completo vs atribuido:</strong><br>
+        Consultas: 3.470 sistema → 81 atribuidas (2.3%)<br>
+        Exámenes: 1.130 sistema → 14 atribuidos (1.2%)<br>
+        <strong>Pabellón: 767 sistema → 1 atribuido (0.1%)</strong>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="note-box">
+  <strong>⚠️ Otras limitaciones del modelo:</strong><br>
+  <strong>1. Ads sin UTM (conjunto pausado):</strong> Un conjunto de anuncios fue publicado con enlaces de WhatsApp sin parámetros UTM. Esos pacientes llegan como "orgánico" en el CRM aunque vinieron de un anuncio — al menos 61 conversaciones adicionales perdidas.<br>
+  <strong>2. Instagram DMs:</strong> Los mensajes directos por Instagram no capturan teléfono, por lo que no se pueden cruzar con el sistema clínico.<br>
+  <strong>Los 66 pacientes / 96 citas son cifras mínimas confirmadas.</strong> El impacto real de Meta Ads en CEOLA es significativamente mayor.
+</div>
+
+<!-- Organic channels red note -->
+<div style="width:100%;max-width:1100px;background:#FFEBEE;border:2px solid #EF5350;border-left:4px solid #B71C1C;border-radius:12px;padding:18px 22px;margin-top:20px">
+  <div style="font-size:0.88rem;font-weight:800;color:#B71C1C;margin-bottom:12px">🔴 Los 810 contactos orgánicos (sin código de anuncio) no son necesariamente espontáneos</div>
+  <div style="font-size:0.8rem;color:#4A0000;line-height:1.7;margin-bottom:14px">
+    Al analizar el canal de origen de los 810 contactos sin UTM en el CRM se identificaron <strong>3 fuentes distintas</strong> — ninguna atribuible a un anuncio específico por falta de parámetros de seguimiento:
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:14px">
+    <div style="background:white;border-radius:8px;padding:12px 16px;text-align:center;border:1px solid #FFCDD2">
+      <div style="font-size:1.3rem;font-weight:800;color:#B71C1C">696</div>
+      <div style="font-size:0.73rem;font-weight:700;color:#B71C1C;margin-bottom:4px">WhatsApp directo</div>
+      <div style="font-size:0.7rem;color:#7B1C1C;line-height:1.4">Escribieron el número directamente (Google, web, boca a boca). Sin UTM, imposible saber origen exacto.</div>
+    </div>
+    <div style="background:white;border-radius:8px;padding:12px 16px;text-align:center;border:1px solid #F48FB1">
+      <div style="font-size:1.3rem;font-weight:800;color:#880E4F">82</div>
+      <div style="font-size:0.73rem;font-weight:700;color:#880E4F;margin-bottom:4px">Instagram orgánico</div>
+      <div style="font-size:0.7rem;color:#880E4F;line-height:1.4">Iniciaron contacto desde Instagram. Probablemente desde el link en bio o el perfil de @ceola_vinadelmar.</div>
+    </div>
+    <div style="background:white;border-radius:8px;padding:12px 16px;text-align:center;border:1px solid #CE93D8">
+      <div style="font-size:1.3rem;font-weight:800;color:#6A1B9A">32</div>
+      <div style="font-size:0.73rem;font-weight:700;color:#6A1B9A;margin-bottom:4px">Facebook Messenger</div>
+      <div style="font-size:0.7rem;color:#6A1B9A;line-height:1.4">Mensajes desde la página de Facebook. Podrían venir de posts orgánicos o de usuarios que vieron un anuncio.</div>
+    </div>
+  </div>
+  <div style="font-size:0.8rem;color:#4A0000;line-height:1.7;border-top:1px dashed #FFCDD2;padding-top:12px">
+    <strong>Los 82 de Instagram orgánico</strong> probablemente llegan del link en bio de @ceola_vinadelmar, que podría estar asociado a la campaña de Tráfico o a seguidores que vieron un Reel. Sin UTM en ese link, no es posible distinguir si vinieron de un anuncio pagado, un Reel orgánico o búsqueda directa del perfil.<br><br>
+    <strong>Oportunidad:</strong> agregar parámetros UTM al link en bio permitiría atribuir estos contactos a su fuente real. El volumen de mensajes iniciados desde Instagram es también un indicador de efectividad orgánica que vale monitorear por separado del resultado de ads.
+  </div>
+</div>
+
+<div style="text-align:center;margin-top:24px;font-size:0.75rem;color:#A0AEC0">
+  Generado para CEOLA Viña del Mar · Período Feb–Abr 2026 · Análisis: Pablo Solís
+</div>
+
+</body>
+</html>
