@@ -966,55 +966,183 @@ function exportCSV() {
 init();
 </script>
 
-  <!-- ── Monthly Chart ── -->
+  <!-  <!-- ── Charts ── -->
+
+  <!-- Chart 1: Citas por tipo de servicio (stacked) + total line -->
   <div class="chart-section">
-    <div class="chart-title">Actividad mensual — Contactos vía ads vs. Citas atribuidas</div>
-    <div class="chart-sub">Eje izquierdo: citas atribuidas por tipo de servicio (barras apiladas + línea total). Eje derecho: contactos únicos que llegaron por ads ese mes (CRM completo, n=757).</div>
-    <canvas id="monthlyChart" height="95"></canvas>
+    <div class="chart-title">Citas atribuidas por mes y tipo de servicio</div>
+    <div class="chart-sub">Barras apiladas por tipo de servicio · línea = total citas atribuidas ese mes</div>
+    <canvas id="chart1" height="90"></canvas>
   </div>
+
+  <!-- Chart 2: Contactos CRM vs pacientes que agendaron -->
+  <div class="chart-section" style="margin-top:24px">
+    <div class="chart-title">Conversión por mes de primer contacto</div>
+    <div class="chart-sub">De todos los que contactaron por ads ese mes (CRM completo, n=757), cuántos terminaron con cita atribuida</div>
+    <canvas id="chart2" height="90"></canvas>
+  </div>
+
+  <!-- Chart 3: Lag contacto → cita (filtro por mes de cita) -->
+  <div class="chart-section" style="margin-top:24px">
+    <div class="chart-title">¿Cuándo contactaron los pacientes que agendaron ese mes?</div>
+    <div class="chart-sub">Selecciona un mes de cita → muestra en qué mes hicieron el primer contacto por ads (lag entre anuncio y agendamiento)</div>
+    <div style="margin-bottom:16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      <label style="font-size:.85rem;font-weight:600;color:var(--muted)">Mes en que agendaron:</label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap" id="lagBtns">
+        <button class="lag-btn lag-active" data-m="" onclick="updateLag(this)">Todos los meses</button>
+        <button class="lag-btn" data-m="Febrero" onclick="updateLag(this)">Febrero</button>
+        <button class="lag-btn" data-m="Marzo" onclick="updateLag(this)">Marzo</button>
+        <button class="lag-btn" data-m="Abril" onclick="updateLag(this)">Abril</button>
+      </div>
+    </div>
+    <canvas id="chart3" height="90"></canvas>
+    <div id="lagNote" style="margin-top:12px;font-size:.78rem;color:var(--muted);text-align:center"></div>
+  </div>
+
+  <style>
+    .lag-btn{padding:6px 14px;border-radius:20px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:.82rem;cursor:pointer;transition:.15s;}
+    .lag-btn:hover{border-color:var(--teal);}
+    .lag-btn.lag-active{background:var(--teal);color:white;border-color:var(--teal);}
+  </style>
+
   <script>
   (function(){
     const months = ['Febrero','Marzo','Abril'];
-    const CRM_CONTACTS = {Febrero:37, Marzo:481, Abril:239};
-    const svc = (tipo,mes) => ROWS.filter(r=>r.Tipo_Servicio===tipo&&r.Mes_Cita===mes).length;
-    const consultas = months.map(m=>svc('Consulta Médica',m));
-    const examenes  = months.map(m=>svc('Examen',m));
-    const pabellon  = months.map(m=>svc('Pabellón (Cirugía)',m));
-    const totCitas  = months.map(m=>ROWS.filter(r=>r.Mes_Cita===m).length);
-    const contacts  = months.map(m=>CRM_CONTACTS[m]);
+    function monthOf(d){ const m=d.split('-')[1]; return m==='02'?'Febrero':m==='03'?'Marzo':'Abril'; }
 
-    new Chart(document.getElementById('monthlyChart'), {
+    // ── Unique patients by contact month (from ROWS) ──────────────────────────
+    const patContactMonth = {};
+    ROWS.forEach(r => { if(!patContactMonth[r.RUT]) patContactMonth[r.RUT] = monthOf(r.Fecha_Contacto_WA); });
+    const atribByContact = {Febrero:0,Marzo:0,Abril:0};
+    Object.values(patContactMonth).forEach(m => atribByContact[m]++);
+
+    // CRM total contacts per month (all 757 unique ad phones)
+    const CRM_TOTAL = {Febrero:37, Marzo:481, Abril:239};
+
+    // ── CHART 1: stacked bars by service type + total line ────────────────────
+    const svc = (tipo,mes) => ROWS.filter(r=>r.Tipo_Servicio===tipo&&r.Mes_Cita===mes).length;
+    new Chart(document.getElementById('chart1'),{
       data:{
         labels: months,
         datasets:[
-          {type:'bar',  label:'Consulta Médica',        data:consultas, backgroundColor:'rgba(0,137,123,.82)',  borderRadius:4, stack:'citas', order:3},
-          {type:'bar',  label:'Examen',                 data:examenes,  backgroundColor:'rgba(0,172,193,.82)',  borderRadius:4, stack:'citas', order:3},
-          {type:'bar',  label:'Pabellón (Cirugía)',      data:pabellon,  backgroundColor:'rgba(123,31,162,.82)', borderRadius:4, stack:'citas', order:3},
-          {type:'line', label:'Total citas atribuidas',  data:totCitas,  borderColor:'#FF8F00', backgroundColor:'rgba(255,143,0,.08)', borderWidth:2.5, pointRadius:5, pointBackgroundColor:'#FF8F00', tension:.35, order:1, yAxisID:'y'},
-          {type:'line', label:'Contactos únicos ads (CRM)', data:contacts, borderColor:'#EF5350', backgroundColor:'rgba(239,83,80,.07)', borderWidth:2.5, pointRadius:5, pointBackgroundColor:'#EF5350', borderDash:[5,3], tension:.35, order:0, yAxisID:'y2'}
+          {type:'bar',  label:'Consulta Médica',       data:months.map(m=>svc('Consulta Médica',m)),   backgroundColor:'rgba(0,137,123,.82)',  borderRadius:4, stack:'s', order:2},
+          {type:'bar',  label:'Examen',                data:months.map(m=>svc('Examen',m)),            backgroundColor:'rgba(0,172,193,.82)',  borderRadius:4, stack:'s', order:2},
+          {type:'bar',  label:'Pabellón (Cirugía)',     data:months.map(m=>svc('Pabellón (Cirugía)',m)),backgroundColor:'rgba(123,31,162,.82)', borderRadius:4, stack:'s', order:2},
+          {type:'line', label:'Total citas atribuidas', data:months.map(m=>ROWS.filter(r=>r.Mes_Cita===m).length),
+            borderColor:'#FF8F00',backgroundColor:'rgba(255,143,0,.08)',borderWidth:2.5,pointRadius:5,pointBackgroundColor:'#FF8F00',tension:.35,order:1}
         ]
       },
       options:{
-        responsive:true,
-        interaction:{mode:'index',intersect:false},
+        responsive:true, interaction:{mode:'index',intersect:false},
         plugins:{
-          legend:{position:'bottom',labels:{padding:18,font:{size:12}}},
-          tooltip:{callbacks:{
-            footer: items => {
-              const s = items.filter(i=>i.dataset.stack==='citas').reduce((a,i)=>a+i.parsed.y,0);
-              return s>0 ? 'Total citas: '+s : '';
-            }
-          }}
+          legend:{position:'bottom',labels:{padding:16,font:{size:12}}},
+          tooltip:{callbacks:{footer:items=>{
+            const s=items.filter(i=>i.dataset.stack==='s').reduce((a,i)=>a+i.parsed.y,0);
+            return s>0?'Total citas: '+s:'';
+          }}}
         },
         scales:{
           x:{grid:{display:false}},
-          y:{position:'left', title:{display:true,text:'Citas atribuidas',font:{size:11}}, ticks:{stepSize:5}, grid:{color:'rgba(0,0,0,.05)'}},
-          y2:{position:'right', title:{display:true,text:'Contactos CRM',font:{size:11}}, grid:{display:false}}
+          y:{title:{display:true,text:'Citas atribuidas',font:{size:11}},ticks:{stepSize:5},grid:{color:'rgba(0,0,0,.05)'}}
         }
       }
     });
+
+    // ── CHART 2: CRM total vs atribuidos (by contact month) ──────────────────
+    new Chart(document.getElementById('chart2'),{
+      data:{
+        labels: months,
+        datasets:[
+          {type:'bar', label:'Contactos únicos por ads (CRM total)',
+            data:months.map(m=>CRM_TOTAL[m]),
+            backgroundColor:'rgba(239,83,80,.75)', borderRadius:4, order:1},
+          {type:'bar', label:'Pacientes únicos con cita atribuida',
+            data:months.map(m=>atribByContact[m]),
+            backgroundColor:'rgba(0,137,123,.82)', borderRadius:4, order:1}
+        ]
+      },
+      options:{
+        responsive:true, interaction:{mode:'index',intersect:false},
+        plugins:{
+          legend:{position:'bottom',labels:{padding:16,font:{size:12}}},
+          tooltip:{callbacks:{afterBody:items=>{
+            const total=items.find(i=>i.datasetIndex===0)?.parsed.y||0;
+            const atrib=items.find(i=>i.datasetIndex===1)?.parsed.y||0;
+            return total>0?['','Tasa de atribución: '+(Math.round(atrib/total*1000)/10)+'%']:[];
+          }}}
+        },
+        scales:{
+          x:{grid:{display:false}},
+          y:{title:{display:true,text:'Personas',font:{size:11}},grid:{color:'rgba(0,0,0,.05)'}}
+        }
+      }
+    });
+
+    // ── CHART 3: lag contact → cita (filterable) ──────────────────────────────
+    let chart3 = null;
+
+    function buildLagData(filterMes) {
+      // unique patients with cita in filterMes, grouped by their contact month
+      const seen = {};
+      ROWS.forEach(r => {
+        if(filterMes && r.Mes_Cita !== filterMes) return;
+        if(!seen[r.RUT]) seen[r.RUT] = monthOf(r.Fecha_Contacto_WA);
+      });
+      const result = {Febrero:0, Marzo:0, Abril:0};
+      Object.values(seen).forEach(m => result[m]++);
+      const total = Object.values(result).reduce((a,b)=>a+b,0);
+      return { data: months.map(m=>result[m]), total };
+    }
+
+    window.updateLag = function(btn) {
+      document.querySelectorAll('.lag-btn').forEach(b=>b.classList.remove('lag-active'));
+      btn.classList.add('lag-active');
+      const m = btn.getAttribute('data-m');
+      const { data, total } = buildLagData(m);
+      const label = m || 'todos los meses';
+
+      if(chart3) chart3.destroy();
+      chart3 = new Chart(document.getElementById('chart3'),{
+        data:{
+          labels: months,
+          datasets:[{
+            type:'bar',
+            label: 'Pacientes únicos que agendaron en ' + (m||'cualquier mes'),
+            data,
+            backgroundColor: months.map(cm =>
+              m && cm === m ? 'rgba(0,137,123,.9)' : 'rgba(0,137,123,.65)'
+            ),
+            borderRadius:5
+          }]
+        },
+        options:{
+          responsive:true, interaction:{mode:'index',intersect:false},
+          plugins:{
+            legend:{display:false},
+            tooltip:{callbacks:{
+              label: ctx => ' '+ctx.parsed.y+' pacientes',
+              afterLabel: ctx => {
+                const pct = total>0 ? Math.round(ctx.parsed.y/total*100) : 0;
+                return ' '+pct+'% del grupo seleccionado';
+              }
+            }}
+          },
+          scales:{
+            x:{grid:{display:false}, title:{display:true,text:'Mes del primer contacto por ads',font:{size:11}}},
+            y:{title:{display:true,text:'Pacientes únicos',font:{size:11}},ticks:{stepSize:1},grid:{color:'rgba(0,0,0,.05)'}}
+          }
+        }
+      });
+
+      const parts = months.map(cm=>{
+        const n = data[months.indexOf(cm)];
+        return n>0 ? n+' contactaron en '+cm : null;
+      }).filter(Boolean);
+      document.getElementById('lagNote').textContent =
+        total + ' paciente' + (total!==1?'s':'') + ' con cita en '+(m||'cualquier mes')+': '+parts.join(', ')+'.';
+    };
+
+    updateLag(document.querySelector('.lag-btn'));
   })();
   </script>
-
 </body>
-</html>
