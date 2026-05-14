@@ -1083,16 +1083,13 @@ init();
 
     function buildLagData(filterMes) {
       const order = {Febrero:1, Marzo:2, Abril:3};
-      const seen = {};
+      const result = {Febrero:0, Marzo:0, Abril:0};
       ROWS.forEach(r => {
         if(filterMes && r.Mes_Cita !== filterMes) return;
         const contactMes = monthOf(r.Fecha_Contacto_WA);
-        // excluir caso ilógico: contacto posterior a la cita
         if(order[contactMes] > order[r.Mes_Cita]) return;
-        if(!seen[r.RUT]) seen[r.RUT] = contactMes;
+        result[contactMes]++;
       });
-      const result = {Febrero:0, Marzo:0, Abril:0};
-      Object.values(seen).forEach(m => result[m]++);
       const total = Object.values(result).reduce((a,b)=>a+b,0);
       return { data: months.map(m=>result[m]), total };
     }
@@ -1110,7 +1107,7 @@ init();
           labels: months,
           datasets:[{
             type:'bar',
-            label: 'Pacientes únicos que agendaron en ' + (m||'cualquier mes'),
+            label: 'Citas atribuidas en ' + (m||'cualquier mes'),
             data,
             backgroundColor: months.map(cm =>
               m && cm === m ? 'rgba(0,137,123,.9)' : 'rgba(0,137,123,.65)'
@@ -1123,10 +1120,10 @@ init();
           plugins:{
             legend:{display:false},
             tooltip:{callbacks:{
-              label: ctx => ' '+ctx.parsed.y+' pacientes',
+              label: ctx => ' '+ctx.parsed.y+' citas',
               afterLabel: ctx => {
                 const pct = total>0 ? Math.round(ctx.parsed.y/total*100) : 0;
-                return ' '+pct+'% del grupo seleccionado';
+                return ' ('+pct+'% del total del mes)';
               }
             }}
           },
@@ -1142,7 +1139,7 @@ init();
         return n>0 ? n+' contactaron en '+cm : null;
       }).filter(Boolean);
       document.getElementById('lagNote').textContent =
-        total + ' paciente' + (total!==1?'s':'') + ' con cita en '+(m||'cualquier mes')+': '+parts.join(', ')+'.';
+        total + ' cita' + (total!==1?'s':'') + ' en mes '+(m||'cualquier mes')+': '+parts.join(', ')+'.';
     };
 
     updateLag(document.querySelector('.lag-btn'));
