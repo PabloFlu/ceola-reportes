@@ -1005,13 +1005,6 @@ init();
     <canvas id="chart1" height="90"></canvas>
   </div>
 
-  <!-- Chart 2: Contactos CRM vs pacientes que agendaron -->
-  <div class="chart-section" style="margin-top:24px">
-    <div class="chart-title">Conversión por mes de primer contacto</div>
-    <div class="chart-sub">De todos los que contactaron por ads ese mes (CRM completo, n=1144 teléfonos únicos), cuántos tienen cita atribuida. Ej: una persona que contactó en febrero pero agendó su cita en marzo aparece en la barra de febrero.</div>
-    <canvas id="chart2" height="90"></canvas>
-  </div>
-
   <!-- Chart 3: Lag contacto → cita (filtro por mes de cita) -->
   <div class="chart-section" style="margin-top:24px">
     <div class="chart-title">¿Cuándo contactaron los pacientes que agendaron ese mes?</div>
@@ -1048,8 +1041,6 @@ init();
     Object.values(patContactMonth).forEach(m => atribByContact[m]++);
 
     // CRM total contacts per month (all 757 unique ad phones)
-    const CRM_TOTAL = {Febrero:37, Marzo:481, Abril:445, Mayo:181};
-
     // ── CHART 1: stacked bars by service type + total line ────────────────────
     const svc = (tipo,mes) => ROWS.filter(r=>r.Tipo_Servicio===tipo&&r.Mes_Cita===mes).length;
     new Chart(document.getElementById('chart1'),{
@@ -1081,42 +1072,6 @@ init();
         scales:{
           x:{grid:{display:false}},
           y:{title:{display:true,text:'Citas atribuidas',font:{size:11}},ticks:{stepSize:10},grid:{color:'rgba(0,0,0,.05)'}}
-        }
-      }
-    });
-
-    // ── CHART 2: CRM total vs atribuidos (by contact month) ──────────────────
-    new Chart(document.getElementById('chart2'),{
-      data:{
-        labels: months,
-        datasets:[
-          {type:'bar', label:'Contactos únicos por ads (CRM total)',
-            data:months.map(m=>CRM_TOTAL[m]),
-            backgroundColor:'rgba(239,83,80,.75)', borderRadius:4, order:1},
-          {type:'bar', label:'Pacientes con cita atribuida (contactaron ese mes)',
-            data:months.map(m=>atribByContact[m]),
-            backgroundColor:'rgba(0,137,123,.82)', borderRadius:4, order:1}
-        ]
-      },
-      options:{
-        responsive:true, interaction:{mode:'index',intersect:false},
-        plugins:{
-          legend:{position:'bottom',labels:{padding:16,font:{size:12}}},
-          tooltip:{callbacks:{afterBody:items=>{
-            const total=items.find(i=>i.datasetIndex===0)?.parsed.y||0;
-            const atrib=items.find(i=>i.datasetIndex===1)?.parsed.y||0;
-            return total>0?['','Tasa de atribución: '+(Math.round(atrib/total*1000)/10)+'%']:[];
-          }}}
-        },
-        onClick:(evt,els)=>{
-            if(!els.length){clearChartFilter();return;}
-            const m=months[els[0].index];
-            setChartFilter({contactMonth:m, label:'Contactaron en '+m});
-          },
-          onHover:(e,els)=>{e.native.target.style.cursor=els.length?'pointer':'default';},
-        scales:{
-          x:{grid:{display:false}},
-          y:{title:{display:true,text:'Personas',font:{size:11}},grid:{color:'rgba(0,0,0,.05)'}}
         }
       }
     });
