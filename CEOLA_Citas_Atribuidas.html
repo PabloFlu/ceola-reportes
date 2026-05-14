@@ -1082,11 +1082,14 @@ init();
     let chart3 = null;
 
     function buildLagData(filterMes) {
-      // unique patients with cita in filterMes, grouped by their contact month
+      const order = {Febrero:1, Marzo:2, Abril:3};
       const seen = {};
       ROWS.forEach(r => {
         if(filterMes && r.Mes_Cita !== filterMes) return;
-        if(!seen[r.RUT]) seen[r.RUT] = monthOf(r.Fecha_Contacto_WA);
+        const contactMes = monthOf(r.Fecha_Contacto_WA);
+        // excluir caso ilógico: contacto posterior a la cita
+        if(order[contactMes] > order[r.Mes_Cita]) return;
+        if(!seen[r.RUT]) seen[r.RUT] = contactMes;
       });
       const result = {Febrero:0, Marzo:0, Abril:0};
       Object.values(seen).forEach(m => result[m]++);
