@@ -695,6 +695,13 @@
   </div>
 
   <div class="result-count" id="resultCount"></div>
+  <div id="chartFilterChip" style="display:none;align-items:center;gap:8px;margin:6px 0 0;flex-wrap:wrap;">
+    <span style="background:var(--teal);color:white;border-radius:20px;padding:5px 14px;font-size:.82rem;display:flex;align-items:center;gap:8px;">
+      📊 <span id="chartFilterLabel"></span>
+      <button onclick="clearChartFilter()" style="background:rgba(255,255,255,.25);border:none;color:white;border-radius:50%;width:18px;height:18px;cursor:pointer;font-size:12px;line-height:1;padding:0;">×</button>
+    </span>
+    <span style="font-size:.78rem;color:var(--muted)">Haz clic en otra barra para cambiar · clic fuera del gráfico para limpiar</span>
+  </div>
 
   <div class="table-wrap">
     <table id="detailTable">
@@ -731,6 +738,24 @@ const SUMMARY = [{"ID Anuncio":"120245683482050029","Nombre Anuncio":"General Ce
 
 // ─── State ────────────────────────────────────────────────────────────────
 let filtered = [...ROWS];
+let chartFilter = null; // {contactMonth, citaMonth, label}
+
+function contactMonthOf(r) {
+  const m = (r.Fecha_Contacto_WA || '').split('-')[1];
+  return m === '02' ? 'Febrero' : m === '03' ? 'Marzo' : 'Abril';
+}
+function setChartFilter(f) {
+  chartFilter = f;
+  const chip = document.getElementById('chartFilterChip');
+  document.getElementById('chartFilterLabel').textContent = f.label;
+  chip.style.display = 'flex';
+  applyFilters();
+}
+function clearChartFilter() {
+  chartFilter = null;
+  document.getElementById('chartFilterChip').style.display = 'none';
+  applyFilters();
+}
 let sortField = 'Nombre_Anuncio';
 let sortAsc = true;
 let currentPage = 1;
@@ -849,6 +874,10 @@ function applyFilters() {
     if (stats.length  && !stats.includes(r.Estado_Cita_Grupo)) return false;
     if (search && !r.Nombre_Paciente.toLowerCase().includes(search) &&
         !r.RUT.toLowerCase().includes(search)) return false;
+    if (chartFilter) {
+      if (chartFilter.contactMonth && contactMonthOf(r) !== chartFilter.contactMonth) return false;
+      if (chartFilter.citaMonth    && r.Mes_Cita !== chartFilter.citaMonth)            return false;
+    }
     return true;
   });
 
@@ -866,7 +895,7 @@ function applyFilters() {
 function clearFilters() {
   ['msAd','msCamp','msSvc','msMonth','msStatus'].forEach(id => clearMS(id));
   document.getElementById('filterSearch').value = '';
-  applyFilters();
+  clearChartFilter();
 }
 
 function sortBy(field) {
@@ -1041,6 +1070,12 @@ init();
             return s>0?'Total citas: '+s:'';
           }}}
         },
+        onClick:(evt,els)=>{
+            if(!els.length){clearChartFilter();return;}
+            const m=months[els[0].index];
+            setChartFilter({citaMonth:m, label:'Citas en '+m});
+          },
+          onHover:(e,els)=>{e.native.target.style.cursor=els.length?'pointer':'default';},
         scales:{
           x:{grid:{display:false}},
           y:{title:{display:true,text:'Citas atribuidas',font:{size:11}},ticks:{stepSize:5},grid:{color:'rgba(0,0,0,.05)'}}
@@ -1071,6 +1106,12 @@ init();
             return total>0?['','Tasa de atribución: '+(Math.round(atrib/total*1000)/10)+'%']:[];
           }}}
         },
+        onClick:(evt,els)=>{
+            if(!els.length){clearChartFilter();return;}
+            const m=months[els[0].index];
+            setChartFilter({contactMonth:m, label:'Contactaron en '+m});
+          },
+          onHover:(e,els)=>{e.native.target.style.cursor=els.length?'pointer':'default';},
         scales:{
           x:{grid:{display:false}},
           y:{title:{display:true,text:'Personas',font:{size:11}},grid:{color:'rgba(0,0,0,.05)'}}
@@ -1128,9 +1169,17 @@ init();
               }
             }}
           },
+          onClick:(evt,els)=>{
+              if(!els.length){clearChartFilter();return;}
+              const contactM=months[els[0].index];
+              const citaM=btn.getAttribute('data-m')||null;
+              const lbl=citaM?'Cita en '+citaM+' · Contacto en '+contactM:'Contacto en '+contactM;
+              setChartFilter({contactMonth:contactM, citaMonth:citaM||undefined, label:lbl});
+            },
+            onHover:(e,els)=>{e.native.target.style.cursor=els.length?'pointer':'default';},
           scales:{
             x:{grid:{display:false}, title:{display:true,text:'Mes en que contactaron por ads',font:{size:11}}},
-            y:{title:{display:true,text:'Pacientes únicos',font:{size:11}},ticks:{stepSize:1},grid:{color:'rgba(0,0,0,.05)'}}
+            y:{title:{display:true,text:'Citas atribuidas',font:{size:11}},ticks:{stepSize:1},grid:{color:'rgba(0,0,0,.05)'}}
           }
         }
       });
