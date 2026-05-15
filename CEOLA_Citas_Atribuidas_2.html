@@ -396,13 +396,12 @@
 
       <div style="border:1px solid #A7F3D0;border-left:4px solid #059669;border-radius:8px;padding:12px 16px;background:#ECFDF5">
         <div style="font-size:0.8rem;font-weight:700;color:#065F46;margin-bottom:4px">🏥 Sistema Clínico — Citas</div>
-        <div style="font-size:0.75rem;color:#047857;margin-bottom:6px">Citas recibidas desde febrero a abril.xlsx</div>
+        <div style="font-size:0.75rem;color:#047857;margin-bottom:6px">Detalle citas Feb–Abr + Detalle_citas Abr–May 2026 (combinados)</div>
         <div style="font-size:0.75rem;color:#374151;line-height:1.6">
           📅 <strong>1 Feb 2026 → 14 May 2026</strong><br>
           📋 8.305 citas combinadas (deduplicadas): Atendido 3.986 · Recep. 1.124 · Cancelada 1.199 · Pagado 425 · Operado 626 · Falta s/a 268<br>
-          🔑 Campo clave: <code>RUN/DNI_Paciente</code> = RUT del paciente<br>
-          ⚠️ Citas de Pabellón no incluidas en archivo May 2026 — se solicitó corrección
-          ✅ Estados combinados: Atendido (2.443) · Recepcionado (860) · Cancelada (814) · Agendado (248)
+          🔑 Campo clave: <code>RUN/DNI_Paciente</code> / <code>Paciente_RUN</code> = RUT del paciente<br>
+          ⚠️ Archivo May 2026 no incluye citas de Pabellón — se solicitó corrección para próximo reporte
         </div>
       </div>
 
@@ -462,7 +461,7 @@
       <div class="sub">Citas confirmadas</div>
     </div>
     <div class="kpi-card">
-      <div class="val" style="color:var(--dark)" id="kpiAtrPct">1.8%</div>
+      <div class="val" style="color:var(--dark)" id="kpiAtrPct">3.0%</div>
       <div class="lbl">De citas totales</div>
       <div class="sub">250 / 8.305 combinadas</div>
     </div>
@@ -471,7 +470,7 @@
   <!-- Red alert: March 31 cutoff -->
   <div style="background:#FFEBEE;border:2px solid #EF5350;border-radius:10px;padding:14px 20px;margin-bottom:16px;font-size:0.84rem;color:#B71C1C;font-weight:700;display:flex;align-items:flex-start;gap:10px">
     <span style="font-size:1.3rem;flex-shrink:0">🔴</span>
-    <span>LÍMITE DEL ARCHIVO PUENTE: El "Detalle de Pacientes" contiene solo pacientes que se <strong>registraron por primera vez 1 Feb al 14 May 2026 (combinado)</strong>. Pacientes con teléfono no registrado en el sistema clínico no pueden cruzarse. Pacientes pre-Febrero sin reregistro tampoco están. Abril no están en el puente y sus citas no se pueden atribuir; (2) pacientes que ya eran clientes antes de Febrero tampoco están. <strong>Importante:</strong> citas de Abril de pacientes que sí están en el puente (registrados Feb-Mar) sí quedan capturadas — de hecho hay 43 citas de Abril en el conjunto atribuido. Los teléfonos registrados en el sistema clínico con formato diferente al CRM tampoco cruzan.</span>
+    <span>COBERTURA DEL ARCHIVO PUENTE: El "Detalle de Pacientes" combina dos exportes (Feb–Abr y Abr–May 2026), deduplicados por RUT, cubriendo el período completo <strong>1 Feb → 14 May 2026</strong>. Pacientes que ya eran clientes antes de Febrero y no reaparecen en ninguno de los dos archivos no están en el puente y sus citas no se pueden atribuir. Los teléfonos registrados en el sistema clínico con formato diferente al CRM tampoco cruzan.</span>
   </div>
 
   <!-- Funnel & Pabellón context -->
@@ -682,6 +681,8 @@
             <label class="ms-option"><input type="checkbox" class="msStatus-item" value="Recepcionado" checked onchange="msItemChange('msStatus')"> Recepcionado</label>
             <label class="ms-option"><input type="checkbox" class="msStatus-item" value="Agendado" checked onchange="msItemChange('msStatus')"> Agendado</label>
             <label class="ms-option"><input type="checkbox" class="msStatus-item" value="Cancelado" checked onchange="msItemChange('msStatus')"> Cancelado</label>
+            <label class="ms-option"><input type="checkbox" class="msStatus-item" value="Pagado" checked onchange="msItemChange('msStatus')"> Pagado</label>
+            <label class="ms-option"><input type="checkbox" class="msStatus-item" value="Falta sin aviso" checked onchange="msItemChange('msStatus')"> Falta sin aviso</label>
           </div>
         </div>
       </div>
@@ -839,7 +840,7 @@ function renderSummary() {
   const body = document.getElementById('summaryBody');
   body.innerHTML = SUMMARY.map(s => {
     const pct = Math.round((s['Pacientes Únicos'] / maxPat) * 100);
-    const statusBadge = s['Estado'] === 'ACTIVE'
+    const statusBadge = s['Estado Anuncio'] === 'ACTIVE'
       ? '<span style="color:#2E7D32;font-weight:600;font-size:0.72rem">● Activo</span>'
       : '<span style="color:#B71C1C;font-weight:600;font-size:0.72rem">● Pausado</span>';
     return `<tr>
@@ -999,18 +1000,25 @@ init();
 
   <!-  <!-- ── Charts ── -->
 
-  <!-- Chart 1: Citas por tipo de servicio (stacked) + total line -->
-  <div class="chart-section">
-    <div class="chart-title">Citas atribuidas por mes y tipo de servicio</div>
-    <div class="chart-sub">Barras apiladas por tipo de servicio · línea = total citas atribuidas ese mes</div>
-    <canvas id="chart1" height="90"></canvas>
+  <!-- Charts filter bar -->
+  <div style="background:white;border:1px solid #E0E7EF;border-radius:10px;padding:14px 20px;margin-top:32px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+    <span style="font-size:0.78rem;font-weight:700;color:#6B7A8D;text-transform:uppercase;letter-spacing:0.5px">🎛 Filtrar gráficos:</span>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;flex:1">
+      <select id="chartAdSel" onchange="rebuildCharts()" style="padding:7px 12px;border:1px solid #E0E7EF;border-radius:7px;font-size:0.83rem;background:white;color:#1A2B45;outline:none;cursor:pointer;min-width:210px">
+        <option value="">Todos los anuncios</option>
+      </select>
+      <select id="chartCampSel" onchange="rebuildCharts()" style="padding:7px 12px;border:1px solid #E0E7EF;border-radius:7px;font-size:0.83rem;background:white;color:#1A2B45;outline:none;cursor:pointer;min-width:180px">
+        <option value="">Todas las campañas</option>
+      </select>
+    </div>
+    <span id="chartRowsCount" style="font-size:0.78rem;color:#6B7A8D"></span>
   </div>
 
-  <!-- Chart 2: Contactos CRM vs pacientes que agendaron -->
-  <div class="chart-section" style="margin-top:24px">
-    <div class="chart-title">Conversión por mes de primer contacto</div>
-    <div class="chart-sub">De todos los que contactaron por ads ese mes (CRM completo, n=1144 teléfonos únicos), cuántos tienen cita atribuida. Ej: una persona que contactó en febrero pero agendó su cita en marzo aparece en la barra de febrero.</div>
-    <canvas id="chart2" height="90"></canvas>
+  <!-- Chart 1: Citas por tipo de servicio (stacked) + total line -->
+  <div class="chart-section" style="margin-top:12px">
+    <div class="chart-title">Citas atribuidas por mes y tipo de servicio</div>
+    <div class="chart-sub">Barras apiladas por tipo de servicio · línea = total citas atribuidas ese mes · haz clic en una barra para filtrar la tabla</div>
+    <canvas id="chart1" height="90"></canvas>
   </div>
 
   <!-- Chart 3: Lag contacto → cita (filtro por mes de cita) -->
@@ -1038,98 +1046,80 @@ init();
   </style>
 
   <script>
+  // ── Chart filter helpers (outside IIFE so rebuildCharts is global) ────────
+  function getChartRows() {
+    const ad   = document.getElementById('chartAdSel').value;
+    const camp = document.getElementById('chartCampSel').value;
+    return ROWS.filter(r => (!ad || r.Nombre_Anuncio === ad) && (!camp || r.Campaña === camp));
+  }
+
+  // Populate dropdowns once DOM is ready
+  (function populateChartSelects(){
+    const ads = [...new Set(ROWS.map(r=>r.Nombre_Anuncio))].sort();
+    const sel = document.getElementById('chartAdSel');
+    ads.forEach(a=>{ const o=document.createElement('option'); o.value=a; o.textContent=a; sel.appendChild(o); });
+    const camps = [...new Set(ROWS.map(r=>r.Campaña))].sort();
+    const csel = document.getElementById('chartCampSel');
+    camps.forEach(c=>{ const o=document.createElement('option'); o.value=c; o.textContent=c; csel.appendChild(o); });
+  })();
+
   (function(){
     const months = ['Febrero','Marzo','Abril','Mayo'];
     function monthOf(d){ const m=d.split('-')[1]; return m==='02'?'Febrero':m==='03'?'Marzo':m==='04'?'Abril':'Mayo'; }
 
-    // ── Unique patients by contact month (from ROWS) ──────────────────────────
-    const patContactMonth = {};
-    ROWS.forEach(r => { if(!patContactMonth[r.RUT]) patContactMonth[r.RUT] = monthOf(r.Fecha_Contacto_WA); });
-    const atribByContact = {Febrero:0,Marzo:0,Abril:0};
-    Object.values(patContactMonth).forEach(m => atribByContact[m]++);
-
-    // CRM total contacts per month (all 757 unique ad phones)
     const CRM_TOTAL = {Febrero:37, Marzo:481, Abril:445, Mayo:181};
 
-    // ── CHART 1: stacked bars by service type + total line ────────────────────
-    const svc = (tipo,mes) => ROWS.filter(r=>r.Tipo_Servicio===tipo&&r.Mes_Cita===mes).length;
-    new Chart(document.getElementById('chart1'),{
-      data:{
-        labels: months,
-        datasets:[
-          {type:'bar',  label:'Consulta Médica',       data:months.map(m=>svc('Consulta Médica',m)),   backgroundColor:'rgba(0,137,123,.82)',  borderRadius:4, stack:'s', order:2},
-          {type:'bar',  label:'Examen',                data:months.map(m=>svc('Examen',m)),            backgroundColor:'rgba(0,172,193,.82)',  borderRadius:4, stack:'s', order:2},
-          {type:'bar',  label:'Pabellón (Cirugía)',     data:months.map(m=>svc('Pabellón (Cirugía)',m)),backgroundColor:'rgba(123,31,162,.82)', borderRadius:4, stack:'s', order:2},
-          {type:'line', label:'Total citas atribuidas', data:months.map(m=>ROWS.filter(r=>r.Mes_Cita===m).length),
-            borderColor:'#FF8F00',backgroundColor:'rgba(255,143,0,.08)',borderWidth:2.5,pointRadius:5,pointBackgroundColor:'#FF8F00',tension:.35,order:1}
-        ]
-      },
-      options:{
-        responsive:true, interaction:{mode:'index',intersect:false},
-        plugins:{
-          legend:{position:'bottom',labels:{padding:16,font:{size:12}}},
-          tooltip:{callbacks:{footer:items=>{
-            const s=items.filter(i=>i.dataset.stack==='s').reduce((a,i)=>a+i.parsed.y,0);
-            return s>0?'Total citas: '+s:'';
-          }}}
+    // ── CHART 1 ───────────────────────────────────────────────────────────────
+    let chart1 = null;
+    function buildChart1() {
+      if(chart1) chart1.destroy();
+      const rows = getChartRows();
+      document.getElementById('chartRowsCount').textContent = rows.length + ' citas';
+      const svc = (tipo,mes) => rows.filter(r=>r.Tipo_Servicio===tipo&&r.Mes_Cita===mes).length;
+      chart1 = new Chart(document.getElementById('chart1'),{
+        data:{
+          labels: months,
+          datasets:[
+            {type:'bar',  label:'Consulta Médica',      data:months.map(m=>svc('Consulta Médica',m)),    backgroundColor:'rgba(0,137,123,.82)',  borderRadius:4, stack:'s', order:2},
+            {type:'bar',  label:'Examen',               data:months.map(m=>svc('Examen',m)),             backgroundColor:'rgba(0,172,193,.82)',  borderRadius:4, stack:'s', order:2},
+            {type:'bar',  label:'Pabellón (Cirugía)',    data:months.map(m=>svc('Pabellón (Cirugía)',m)), backgroundColor:'rgba(123,31,162,.82)', borderRadius:4, stack:'s', order:2},
+            {type:'line', label:'Total citas atribuidas',data:months.map(m=>rows.filter(r=>r.Mes_Cita===m).length),
+              borderColor:'#FF8F00',backgroundColor:'rgba(255,143,0,.08)',borderWidth:2.5,pointRadius:5,pointBackgroundColor:'#FF8F00',tension:.35,order:1}
+          ]
         },
-        onClick:(evt,els)=>{
+        options:{
+          responsive:true, interaction:{mode:'index',intersect:false},
+          plugins:{
+            legend:{position:'bottom',labels:{padding:16,font:{size:12}}},
+            tooltip:{callbacks:{footer:items=>{
+              const s=items.filter(i=>i.dataset.stack==='s').reduce((a,i)=>a+i.parsed.y,0);
+              return s>0?'Total citas: '+s:'';
+            }}}
+          },
+          onClick:(evt,els)=>{
             if(!els.length){clearChartFilter();return;}
             const m=months[els[0].index];
             setChartFilter({citaMonth:m, label:'Citas en '+m});
           },
           onHover:(e,els)=>{e.native.target.style.cursor=els.length?'pointer':'default';},
-        scales:{
-          x:{grid:{display:false}},
-          y:{title:{display:true,text:'Citas atribuidas',font:{size:11}},ticks:{stepSize:10},grid:{color:'rgba(0,0,0,.05)'}}
+          scales:{
+            x:{grid:{display:false}},
+            y:{title:{display:true,text:'Citas atribuidas',font:{size:11}},ticks:{stepSize:10},grid:{color:'rgba(0,0,0,.05)'}}
+          }
         }
-      }
-    });
-
-    // ── CHART 2: CRM total vs atribuidos (by contact month) ──────────────────
-    new Chart(document.getElementById('chart2'),{
-      data:{
-        labels: months,
-        datasets:[
-          {type:'bar', label:'Contactos únicos por ads (CRM total)',
-            data:months.map(m=>CRM_TOTAL[m]),
-            backgroundColor:'rgba(239,83,80,.75)', borderRadius:4, order:1},
-          {type:'bar', label:'Pacientes con cita atribuida (contactaron ese mes)',
-            data:months.map(m=>atribByContact[m]),
-            backgroundColor:'rgba(0,137,123,.82)', borderRadius:4, order:1}
-        ]
-      },
-      options:{
-        responsive:true, interaction:{mode:'index',intersect:false},
-        plugins:{
-          legend:{position:'bottom',labels:{padding:16,font:{size:12}}},
-          tooltip:{callbacks:{afterBody:items=>{
-            const total=items.find(i=>i.datasetIndex===0)?.parsed.y||0;
-            const atrib=items.find(i=>i.datasetIndex===1)?.parsed.y||0;
-            return total>0?['','Tasa de atribución: '+(Math.round(atrib/total*1000)/10)+'%']:[];
-          }}}
-        },
-        onClick:(evt,els)=>{
-            if(!els.length){clearChartFilter();return;}
-            const m=months[els[0].index];
-            setChartFilter({contactMonth:m, label:'Contactaron en '+m});
-          },
-          onHover:(e,els)=>{e.native.target.style.cursor=els.length?'pointer':'default';},
-        scales:{
-          x:{grid:{display:false}},
-          y:{title:{display:true,text:'Personas',font:{size:11}},grid:{color:'rgba(0,0,0,.05)'}}
-        }
-      }
-    });
+      });
+    }
+    buildChart1();
 
     // ── CHART 3: lag contact → cita (filterable) ──────────────────────────────
     let chart3 = null;
 
     function buildLagData(filterMes) {
-      const order = {Febrero:1, Marzo:2, Abril:3};
+      const rows = getChartRows();
+      const order = {Febrero:1, Marzo:2, Abril:3, Mayo:4};
       const result = {Febrero:0, Marzo:0, Abril:0, Mayo:0};
       let excluded = 0;
-      ROWS.forEach(r => {
+      rows.forEach(r => {
         if(filterMes && r.Mes_Cita !== filterMes) return;
         const contactMes = monthOf(r.Fecha_Contacto_WA);
         if(order[contactMes] > order[r.Mes_Cita]) { excluded++; return; }
@@ -1197,6 +1187,12 @@ init();
     };
 
     updateLag(document.querySelector('.lag-btn'));
+
+    // ── rebuildCharts: called when chart filter dropdowns change ──────────────
+    window.rebuildCharts = function() {
+      buildChart1();
+      updateLag(document.querySelector('.lag-btn.lag-active') || document.querySelector('.lag-btn'));
+    };
   })();
   </script>
 </body>
