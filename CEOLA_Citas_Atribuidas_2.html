@@ -995,47 +995,70 @@ init();
 
   <!-  <!-- ── Charts ── -->
 
-  <!-- Charts filter bar -->
-  <div style="background:white;border:1px solid #E0E7EF;border-radius:10px;padding:16px 20px;margin-top:32px">
-    <div style="font-size:0.78rem;font-weight:700;color:#6B7A8D;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px">🎛 Filtrar gráficos</div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;align-items:end">
-      <div>
-        <div style="font-size:0.72rem;color:#6B7A8D;font-weight:600;margin-bottom:4px">Anuncio</div>
-        <select id="chartAdSel" onchange="rebuildCharts()" style="width:100%;padding:7px 10px;border:1px solid #E0E7EF;border-radius:7px;font-size:0.82rem;background:white;color:#1A2B45;outline:none;cursor:pointer">
-          <option value="">Todos</option>
-        </select>
+  <!-- Charts filter bar (multi-select) -->
+  <div class="filters-panel" style="margin-top:32px">
+    <h3>🎛 Filtrar gráficos</h3>
+    <div class="filters-grid">
+      <div class="filter-group">
+        <label>Anuncio</label>
+        <div class="ms-wrap" id="msChartAd" data-ph="Todos los anuncios">
+          <div class="ms-trigger" onclick="toggleMS('msChartAd')">
+            <span id="msChartAd-lbl">Todos los anuncios</span><span style="opacity:.5">▾</span>
+          </div>
+          <div class="ms-dropdown">
+            <label class="ms-option ms-all-row"><input type="checkbox" id="msChartAd-all" checked onchange="msChartToggleAll('msChartAd')"> Todos</label>
+          </div>
+        </div>
       </div>
-      <div>
-        <div style="font-size:0.72rem;color:#6B7A8D;font-weight:600;margin-bottom:4px">Campaña</div>
-        <select id="chartCampSel" onchange="rebuildCharts()" style="width:100%;padding:7px 10px;border:1px solid #E0E7EF;border-radius:7px;font-size:0.82rem;background:white;color:#1A2B45;outline:none;cursor:pointer">
-          <option value="">Todas</option>
-        </select>
+      <div class="filter-group">
+        <label>Campaña</label>
+        <div class="ms-wrap" id="msChartCamp" data-ph="Todas las campañas">
+          <div class="ms-trigger" onclick="toggleMS('msChartCamp')">
+            <span id="msChartCamp-lbl">Todas las campañas</span><span style="opacity:.5">▾</span>
+          </div>
+          <div class="ms-dropdown">
+            <label class="ms-option ms-all-row"><input type="checkbox" id="msChartCamp-all" checked onchange="msChartToggleAll('msChartCamp')"> Todos</label>
+          </div>
+        </div>
       </div>
-      <div>
-        <div style="font-size:0.72rem;color:#6B7A8D;font-weight:600;margin-bottom:4px">Tipo de Servicio</div>
-        <select id="chartSvcSel" onchange="rebuildCharts()" style="width:100%;padding:7px 10px;border:1px solid #E0E7EF;border-radius:7px;font-size:0.82rem;background:white;color:#1A2B45;outline:none;cursor:pointer">
-          <option value="">Todos</option>
-          <option value="Consulta Médica">Consulta Médica</option>
-          <option value="Examen">Examen</option>
-          <option value="Pabellón (Cirugía)">Pabellón (Cirugía)</option>
-        </select>
+      <div class="filter-group">
+        <label>Tipo de Servicio</label>
+        <div class="ms-wrap" id="msChartSvc" data-ph="Todos los tipos">
+          <div class="ms-trigger" onclick="toggleMS('msChartSvc')">
+            <span id="msChartSvc-lbl">Todos los tipos</span><span style="opacity:.5">▾</span>
+          </div>
+          <div class="ms-dropdown">
+            <label class="ms-option ms-all-row"><input type="checkbox" id="msChartSvc-all" checked onchange="msChartToggleAll('msChartSvc')"> Todos</label>
+            <label class="ms-option"><input type="checkbox" class="msChartSvc-item" value="Consulta Médica" checked onchange="msChartItemChange('msChartSvc')"> Consulta Médica</label>
+            <label class="ms-option"><input type="checkbox" class="msChartSvc-item" value="Examen" checked onchange="msChartItemChange('msChartSvc')"> Examen</label>
+            <label class="ms-option"><input type="checkbox" class="msChartSvc-item" value="Pabellón (Cirugía)" checked onchange="msChartItemChange('msChartSvc')"> Pabellón (Cirugía)</label>
+          </div>
+        </div>
       </div>
-      <div>
-        <div style="font-size:0.72rem;color:#6B7A8D;font-weight:600;margin-bottom:4px">Estado de la Cita</div>
-        <select id="chartEstSel" onchange="rebuildCharts()" style="width:100%;padding:7px 10px;border:1px solid #E0E7EF;border-radius:7px;font-size:0.82rem;background:white;color:#1A2B45;outline:none;cursor:pointer">
-          <option value="">Todos</option>
-          <option value="Atendido">Atendido</option>
-          <option value="Recepcionado">Recepcionado</option>
-          <option value="Agendado">Agendado</option>
-          <option value="Cancelado">Cancelado</option>
-          <option value="Pagado">Pagado</option>
-          <option value="Falta sin aviso">Falta sin aviso</option>
-        </select>
+      <div class="filter-group">
+        <label>Estado de la Cita</label>
+        <div class="ms-wrap" id="msChartEst" data-ph="Todos los estados">
+          <div class="ms-trigger" onclick="toggleMS('msChartEst')">
+            <span id="msChartEst-lbl">Todos los estados</span><span style="opacity:.5">▾</span>
+          </div>
+          <div class="ms-dropdown">
+            <label class="ms-option ms-all-row"><input type="checkbox" id="msChartEst-all" checked onchange="msChartToggleAll('msChartEst')"> Todos</label>
+            <label class="ms-option"><input type="checkbox" class="msChartEst-item" value="Atendido" checked onchange="msChartItemChange('msChartEst')"> Atendido</label>
+            <label class="ms-option"><input type="checkbox" class="msChartEst-item" value="Recepcionado" checked onchange="msChartItemChange('msChartEst')"> Recepcionado</label>
+            <label class="ms-option"><input type="checkbox" class="msChartEst-item" value="Agendado" checked onchange="msChartItemChange('msChartEst')"> Agendado</label>
+            <label class="ms-option"><input type="checkbox" class="msChartEst-item" value="Cancelado" checked onchange="msChartItemChange('msChartEst')"> Cancelado</label>
+            <label class="ms-option"><input type="checkbox" class="msChartEst-item" value="Pagado" checked onchange="msChartItemChange('msChartEst')"> Pagado</label>
+            <label class="ms-option"><input type="checkbox" class="msChartEst-item" value="Falta sin aviso" checked onchange="msChartItemChange('msChartEst')"> Falta sin aviso</label>
+          </div>
+        </div>
       </div>
-      <div style="align-self:end">
-        <button onclick="clearChartFilters()" style="width:100%;padding:7px 10px;background:var(--dark);color:white;border:none;border-radius:7px;font-size:0.82rem;cursor:pointer;font-weight:600">Limpiar</button>
+      <div class="filter-group">
+        <label>&nbsp;</label>
+        <button class="btn-clear" onclick="clearChartFilters()">Limpiar filtros</button>
       </div>
-      <span id="chartRowsCount" style="font-size:0.78rem;color:#6B7A8D;align-self:center"></span>
+      <div class="filter-group" style="align-self:center">
+        <span id="chartRowsCount" style="font-size:0.78rem;color:#6B7A8D"></span>
+      </div>
     </div>
   </div>
 
@@ -1071,35 +1094,54 @@ init();
   </style>
 
   <script>
-  // ── Chart filter helpers (outside IIFE so rebuildCharts is global) ────────
+  // ── Chart multi-select helpers ────────────────────────────────────────────
+  function msChartItemChange(id) {
+    const all   = document.getElementById(id+'-all');
+    const items = document.querySelectorAll('.'+id+'-item');
+    const checked = [...items].filter(cb=>cb.checked);
+    if(all) all.checked = checked.length === items.length;
+    updateMSLabel(id);
+    rebuildCharts();
+  }
+  function msChartToggleAll(id) {
+    const all = document.getElementById(id+'-all');
+    document.querySelectorAll('.'+id+'-item').forEach(cb=>cb.checked=all.checked);
+    updateMSLabel(id);
+    rebuildCharts();
+  }
+
   function getChartRows() {
-    const ad   = document.getElementById('chartAdSel').value;
-    const camp = document.getElementById('chartCampSel').value;
-    const svc  = document.getElementById('chartSvcSel').value;
-    const est  = document.getElementById('chartEstSel').value;
+    const ads  = getMS('msChartAd');
+    const camps = getMS('msChartCamp');
+    const svcs  = getMS('msChartSvc');
+    const ests  = getMS('msChartEst');
     return ROWS.filter(r =>
-      (!ad   || r.Nombre_Anuncio     === ad)   &&
-      (!camp || r.Campaña            === camp) &&
-      (!svc  || r.Tipo_Servicio      === svc)  &&
-      (!est  || r.Estado_Cita_Grupo  === est)
+      (!ads.length   || ads.includes(r.Nombre_Anuncio))    &&
+      (!camps.length || camps.includes(r.Campaña))          &&
+      (!svcs.length  || svcs.includes(r.Tipo_Servicio))     &&
+      (!ests.length  || ests.includes(r.Estado_Cita_Grupo))
     );
   }
 
   function clearChartFilters() {
-    ['chartAdSel','chartCampSel','chartSvcSel','chartEstSel'].forEach(id => {
-      document.getElementById(id).value = '';
-    });
+    ['msChartAd','msChartCamp','msChartSvc','msChartEst'].forEach(id => clearMS(id));
     rebuildCharts();
   }
 
-  // Populate dropdowns once DOM is ready
-  (function populateChartSelects(){
-    const ads = [...new Set(ROWS.map(r=>r.Nombre_Anuncio))].sort();
-    const sel = document.getElementById('chartAdSel');
-    ads.forEach(a=>{ const o=document.createElement('option'); o.value=a; o.textContent=a; sel.appendChild(o); });
-    const camps = [...new Set(ROWS.map(r=>r.Campaña))].sort();
-    const csel = document.getElementById('chartCampSel');
-    camps.forEach(c=>{ const o=document.createElement('option'); o.value=c; o.textContent=c; csel.appendChild(o); });
+  // Populate dynamic ms-wrap dropdowns (Anuncio + Campaña) from ROWS
+  (function populateChartMS(){
+    function addItems(wrapperId, values) {
+      const dropdown = document.querySelector('#'+wrapperId+' .ms-dropdown');
+      const cls = wrapperId+'-item';
+      values.forEach(v => {
+        const lbl = document.createElement('label');
+        lbl.className = 'ms-option';
+        lbl.innerHTML = '<input type="checkbox" class="'+cls+'" value="'+v.replace(/"/g,'&quot;')+'" checked onchange="msChartItemChange(\''+wrapperId+'\')"> '+v;
+        dropdown.appendChild(lbl);
+      });
+    }
+    addItems('msChartAd',   [...new Set(ROWS.map(r=>r.Nombre_Anuncio))].sort());
+    addItems('msChartCamp', [...new Set(ROWS.map(r=>r.Campaña))].sort());
   })();
 
   (function(){
@@ -1116,7 +1158,28 @@ init();
       const rows = getChartRows();
       document.getElementById('chartRowsCount').textContent = rows.length + ' citas';
       const svc = (tipo,mes) => rows.filter(r=>r.Tipo_Servicio===tipo&&r.Mes_Cita===mes).length;
+      const totalsPlugin = {
+        id:'stackTotals',
+        afterDatasetsDraw(chart) {
+          const { ctx } = chart;
+          const lineMeta = chart.getDatasetMeta(3);
+          if(!lineMeta) return;
+          chart.data.datasets[3].data.forEach((val, i) => {
+            if(!val) return;
+            const pt = lineMeta.data[i];
+            ctx.save();
+            ctx.font = 'bold 13px Segoe UI, sans-serif';
+            ctx.fillStyle = '#E65100';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'bottom';
+            ctx.fillText(val, pt.x, pt.y - 6);
+            ctx.restore();
+          });
+        }
+      };
+
       chart1 = new Chart(document.getElementById('chart1'),{
+        plugins:[totalsPlugin],
         data:{
           labels: months,
           datasets:[
@@ -1124,11 +1187,12 @@ init();
             {type:'bar',  label:'Examen',               data:months.map(m=>svc('Examen',m)),             backgroundColor:'rgba(0,172,193,.82)',  borderRadius:4, stack:'s', order:2},
             {type:'bar',  label:'Pabellón (Cirugía)',    data:months.map(m=>svc('Pabellón (Cirugía)',m)), backgroundColor:'rgba(123,31,162,.82)', borderRadius:4, stack:'s', order:2},
             {type:'line', label:'Total citas atribuidas',data:months.map(m=>rows.filter(r=>r.Mes_Cita===m).length),
-              borderColor:'#FF8F00',backgroundColor:'rgba(255,143,0,.08)',borderWidth:2.5,pointRadius:5,pointBackgroundColor:'#FF8F00',tension:.35,order:1}
+              borderColor:'#FF8F00',backgroundColor:'rgba(255,143,0,.08)',borderWidth:2.5,pointRadius:5,pointBackgroundColor:'#FF8F00',tension:.35,order:1,pointRadius:6}
           ]
         },
         options:{
           responsive:true, interaction:{mode:'index',intersect:false},
+          layout:{padding:{top:24}},
           plugins:{
             legend:{position:'bottom',labels:{padding:16,font:{size:12}}},
             tooltip:{callbacks:{footer:items=>{
